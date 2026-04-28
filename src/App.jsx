@@ -10,7 +10,6 @@ import ProfilePage from './pages/ProfilePage.jsx'
 import CartePage from './pages/CartePage.jsx'
 import BadgesPage from './pages/BadgesPage.jsx'
 import ChatPage from './pages/ChatPage.jsx'
-import AmisPage from './pages/AmisPage.jsx'
 import DefiPage from './pages/DefiPage.jsx'
 import Nav from './components/Nav.jsx'
 
@@ -42,7 +41,6 @@ function AppContent() {
         <Route path="/carte" element={<ProtectedRoute><CartePage /></ProtectedRoute>} />
         <Route path="/badges" element={<ProtectedRoute><BadgesPage /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-        <Route path="/amis" element={<ProtectedRoute><AmisPage /></ProtectedRoute>} />
         <Route path="/defis" element={<ProtectedRoute><DefiPage /></ProtectedRoute>} />
         <Route path="/profil" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       </Routes>

@@ -101,7 +101,7 @@ export default function ChatPage() {
         gap: 10,
         scrollbarWidth: 'none',
         // espace pour input + nav
-        paddingBottom: INPUT_H + NAV_H + 8,
+        paddingBottom: INPUT_H + NAV_H + 28,
       }}>
         {messages.length === 0 && (
           <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--tx2)' }}>
@@ -147,10 +147,10 @@ export default function ChatPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input — positionné juste AU-DESSUS de la nav */}
+      {/* Input — positionné juste AU-DESSUS de la nav + bandeau */}
       <div style={{
         position: 'fixed',
-        bottom: NAV_H,
+        bottom: NAV_H + 18,
         left: 0, right: 0,
         padding: '10px 14px 10px',
         borderTop: '1px solid var(--border)',
