@@ -40,31 +40,33 @@ export default function Nav() {
         </svg>
       </button>}
 
-      {/* Bandeau prévention */}
-      <div style={{
-        background: 'var(--tx)',
-        color: 'var(--bg)',
-        fontSize: 10,
-        textAlign: 'center',
-        padding: '4px 14px',
-        lineHeight: 1.4,
-        letterSpacing: '.01em',
-        pointerEvents: 'none',
-        userSelect: 'none',
-      }}>
-        🚗 L'abus d'alcool est dangereux pour la santé · À consommer avec modération · Ne pas boire et conduire
-      </div>
-
       {/* Nav */}
       <nav style={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
-        height: 76,
+        height: 'auto',
         background: 'var(--nav-bg)',
         backdropFilter: 'blur(20px)',
         borderTop: '1px solid rgba(255,255,255,0.07)',
         zIndex: 100,
       }}>
-        <div className="nav-scroll" style={{ height: '100%', paddingRight: 64 }}>
+        {/* Bandeau prévention alcool */}
+        <div style={{
+          background: 'var(--tx)',
+          color: 'var(--bg)',
+          fontSize: 9,
+          textAlign: 'center',
+          padding: '3px 14px',
+          lineHeight: 1.4,
+          letterSpacing: '.01em',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}>
+          🚗 L'abus d'alcool est dangereux pour la santé · À consommer avec modération · Ne pas boire et conduire
+        </div>
+        <div className="nav-scroll" style={{ height: 76, paddingRight: 64 }}>
           {TABS.map(tab => {
             const active = location.pathname === tab.path
             return (

@@ -3,22 +3,23 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-const PROMPT_IA = `Tu es le modérateur automatique de l'app "Objectif 1 Million de Pintes".
-Analyse cette photo et réponds UNIQUEMENT en JSON valide, sans markdown, sans explication.
+const PROMPT_IA = `Tu es le modérateur de l'app Objectif 1 Million de Pintes. Sois LARGE et BIENVEILLANT. En cas de doute, ACCEPTE.
 
-ACCEPTÉ si la photo montre :
-- Une bière servie dans un verre (demi, pinte, chope, verre à bière)
-- Une bière en canette ou bouteille (toléré si clairement une bière)
-- Une pinte maison dans un verre à pinte
+ACCEPTÉ :
+- Bière dans n'importe quel verre à bière (chope, pinte, demi, gobelet) même si le verre n'est pas plein à plus de 30%
+- Canette ou bouteille de bière ouverte
+- Pinte maison dans verre adapté
+- Verre partiellement hors cadre ou en arrière-plan
 
-REFUSÉ si :
-- Un selfie (visage au premier plan)
-- Pas de bière (cocktail, vin, café, soda, eau, verre vide, photo floue)
-- Bière dans un contenant inadapté (verre à vin, tasse, mug)
-- Aucune boisson visible
+REFUSÉ UNIQUEMENT si :
+- Selfie sans aucune boisson visible
+- Clairement pas une bière (vin, cocktail, soda, eau)
+- Verre manifestement vide à moins de 10%
+- Aucune boisson visible du tout
 
-Réponds avec ce JSON exact :
-{"valide":true,"raison":"explication courte max 15 mots","type_boisson":"ce que tu vois"}`
+EN CAS DE DOUTE : valide=true. Mieux vaut accepter que refuser une vraie pinte.
+
+Réponds UNIQUEMENT en JSON : {"valide":true,"raison":"max 15 mots","type_boisson":"description"}`
 
 async function analyserPhoto(base64Image) {
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -136,10 +137,10 @@ export default function PostPage() {
   const etapeLabel = { analyse: 'Analyse IA en cours...', upload: 'Upload en cours...', done: 'Pinte validée !' }
 
   return (
-    <div style={{ minHeight: '100dvh', paddingBottom: 90, background: '#0d0d0d' }}>
+    <div style={{ minHeight: '100dvh', paddingBottom: 90, background: 'var(--bg)' }}>
       <div style={{ padding: '52px 16px 16px' }}>
-        <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 32, color: '#fffdf5' }}>POSTER</div>
-        <div style={{ fontSize: 12, color: '#7a7670', marginTop: 2 }}>
+        <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 32, color: 'var(--tx)' }}>POSTER</div>
+        <div style={{ fontSize: 12, color: 'var(--tx2)', marginTop: 2 }}>
           Tu en es à <span style={{ color: '#f5a623', fontWeight: 500 }}>{profile?.total_perso || 0}</span> pintes · numéro attribué automatiquement
         </div>
       </div>
@@ -173,7 +174,7 @@ export default function PostPage() {
               )}
             </>
           ) : (
-            <div style={{ textAlign: 'center', color: '#7a7670' }}>
+            <div style={{ textAlign: 'center', color: 'var(--tx2)' }}>
               <div style={{ fontSize: 40, marginBottom: 8 }}>📸</div>
               <div style={{ fontSize: 13 }}>Appuie pour ajouter une photo</div>
               <div style={{ fontSize: 10, marginTop: 4, opacity: 0.5 }}>Analysée automatiquement par IA</div>
@@ -192,8 +193,8 @@ export default function PostPage() {
             <div style={{ fontSize: 13, fontWeight: 500, color: analyse.valide ? '#4ade80' : '#f87171', marginBottom: 3 }}>
               {analyse.valide ? "🍺 Photo validée par l'IA" : '❌ Photo refusée par l\'IA'}
             </div>
-            <div style={{ fontSize: 12, color: '#7a7670' }}>{analyse.raison}</div>
-            {analyse.type_boisson && <div style={{ fontSize: 11, color: '#3a3834', marginTop: 3, fontStyle: 'italic' }}>{analyse.type_boisson}</div>}
+            <div style={{ fontSize: 12, color: 'var(--tx2)' }}>{analyse.raison}</div>
+            {analyse.type_boisson && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 3, fontStyle: 'italic' }}>{analyse.type_boisson}</div>}
             {!analyse.valide && (
               <button onClick={() => { setPhoto(null); setPreview(null); setAnalyse(null); fileRef.current?.click() }}
                 style={{ marginTop: 7, fontSize: 11, color: '#f5a623', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'DM Sans,sans-serif' }}>
@@ -205,16 +206,16 @@ export default function PostPage() {
 
         {/* Lieu + GPS */}
         <div>
-          <div style={{ fontSize: 12, color: '#7a7670', marginBottom: 6 }}>Lieu (optionnel)</div>
+          <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 6 }}>Lieu (optionnel)</div>
           <input value={lieu} onChange={e => setLieu(e.target.value)} placeholder="ex: Le Moloko, Lyon" disabled={loading}
-            style={{ width: '100%', padding: '11px 13px', background: '#181818', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, color: '#ede9e0', fontSize: 13, fontFamily: 'DM Sans,sans-serif', outline: 'none' }} />
+            style={{ width: '100%', padding: '11px 13px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 10, color: 'var(--tx)', fontSize: 13, fontFamily: 'DM Sans,sans-serif', outline: 'none' }} />
         </div>
 
         {/* Toggle GPS */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#181818', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 10 }}>
           <div>
-            <div style={{ fontSize: 13, color: '#ede9e0' }}>📍 Partager ma position</div>
-            <div style={{ fontSize: 11, color: '#7a7670', marginTop: 2 }}>Apparaître sur la carte des pintes</div>
+            <div style={{ fontSize: 13, color: 'var(--tx)' }}>📍 Partager ma position</div>
+            <div style={{ fontSize: 11, color: 'var(--tx2)', marginTop: 2 }}>Apparaître sur la carte des pintes</div>
           </div>
           <div onClick={() => setGpsOn(g => !g)} style={{
             width: 44, height: 26, borderRadius: 13,
@@ -241,7 +242,7 @@ export default function PostPage() {
         }}>
           {loading ? (etapeLabel[etape] || '...') : etape === 'done' ? '🍺 PINTE POSTÉE !' : '🍺 VALIDER MA PINTE'}
         </button>
-        <p style={{ fontSize: 10, color: '#3a3834', textAlign: 'center' }}>Le numéro est attribué automatiquement par le serveur</p>
+        <p style={{ fontSize: 10, color: 'var(--tx3)', textAlign: 'center' }}>Le numéro est attribué automatiquement par le serveur</p>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
