@@ -3,23 +3,33 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-const PROMPT_IA = `Tu es le modérateur de l'app Objectif 1 Million de Pintes. Sois LARGE et BIENVEILLANT. En cas de doute, ACCEPTE.
+const PROMPT_IA = `Tu modères l'app "Objectif 1 Million de Pintes". Ton rôle est d'accepter presque tout.
 
-ACCEPTÉ :
-- Bière dans n'importe quel verre à bière (chope, pinte, demi, gobelet) même si le verre n'est pas plein à plus de 30%
-- Canette ou bouteille de bière ouverte
-- Pinte maison dans verre adapté
-- Verre partiellement hors cadre ou en arrière-plan
+RÈGLE PRINCIPALE : accepte par défaut. Ne refuse QUE si c'est évident et certain.
 
-REFUSÉ UNIQUEMENT si :
-- Selfie sans aucune boisson visible
-- Clairement pas une bière (vin, cocktail, soda, eau)
-- Verre manifestement vide à moins de 10%
-- Aucune boisson visible du tout
+TOUJOURS ACCEPTÉ (même si ce n'est pas parfait) :
+- N'importe quel verre contenant de la bière, même peu rempli, même flou, même en arrière-plan
+- Canette ou bouteille de bière (même fermée si c'est clairement une bière)
+- Verre à moitié vide, verre posé loin, verre mal cadré
+- Photo sombre, floue ou de mauvaise qualité mais avec une bière visible
+- Tout type de bière : blonde, brune, blanche, IPA, stout, bière artisanale...
+- Gobelet de festival, verre plastique, chope, demi, pinte, verre à eau avec de la bière dedans
 
-EN CAS DE DOUTE : valide=true. Mieux vaut accepter que refuser une vraie pinte.
+REFUSÉ UNIQUEMENT dans ces cas CERTAINS et ÉVIDENTS :
+1. Photo de nourriture sans aucune boisson
+2. Photo d'une personne sans boisson visible (selfie pur)
+3. Verre de vin rouge ou blanc clairement identifiable
+4. Cocktail avec parasol ou fruits clairement visibles
+5. Canette/bouteille de soda (Coca, Fanta...) clairement lisible
 
-Réponds UNIQUEMENT en JSON : {"valide":true,"raison":"max 15 mots","type_boisson":"description"}`
+Si tu hésites entre accepter et refuser : ACCEPTE.
+Si la bière n'est pas certaine mais possible : ACCEPTE.
+Si la photo est floue mais il y a peut-être une bière : ACCEPTE.
+
+Réponds UNIQUEMENT avec ce JSON (pas de markdown, pas de texte autour) :
+{"valide":true,"raison":"Courte justification positive ex: belle pinte de blonde","type_boisson":"description de ce que tu vois"}
+
+Si tu refuses (cas rares), la raison doit expliquer clairement POURQUOI ex: "Verre de vin rouge clairement visible, pas de bière"`
 
 async function analyserPhoto(base64Image) {
   const response = await fetch('https://api.anthropic.com/v1/messages', {
