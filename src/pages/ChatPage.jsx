@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth.jsx'
+import Avatar from '../components/Avatar.jsx'
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -11,8 +12,6 @@ function timeAgo(dateStr) {
   if (h < 24) return `${h}h`
   return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 }
-
-function hue(str) { return (str?.charCodeAt(0) || 0) * 15 % 360 }
 
 export default function ChatPage() {
   const { user, profile } = useAuth()
@@ -33,14 +32,10 @@ export default function ChatPage() {
     return () => supabase.removeChannel(channel)
   }, [])
 
-  useEffect(() => {
-    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'instant' }), 100)
-  }, [messages.length === 0])
-
   async function fetchMessages() {
     const { data } = await supabase
       .from('messages_chat')
-      .select('*, profiles(username)')
+      .select('*, profiles(username, avatar_url)')
       .order('created_at', { ascending: true })
       .limit(100)
     setMessages(data || [])
@@ -58,22 +53,35 @@ export default function ChatPage() {
   }
 
   const isMe = (msg) => msg.user_id === user?.id
+  const INPUT_H = 70
+  const NAV_H = 64
+  const HEADER_H = 88
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#0d0d0d' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#0d0d0d', overflow: 'hidden' }}>
       {/* Header */}
-      <div style={{ padding: '52px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', background: '#0d0d0d', flexShrink: 0 }}>
+      <div style={{ padding: '52px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)', background: '#0d0d0d', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ fontSize: 28 }}>💬</div>
+          <div style={{ fontSize: 24 }}>💬</div>
           <div>
-            <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 28, color: '#ede9e0', lineHeight: 1 }}>CHAT</div>
+            <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 26, color: '#ede9e0', lineHeight: 1 }}>CHAT</div>
             <div style={{ fontSize: 11, color: '#7a7670' }}>Chat communautaire</div>
           </div>
         </div>
       </div>
 
-      {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, scrollbarWidth: 'none' }}>
+      {/* Messages — scroll entre header et input */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '12px 14px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        scrollbarWidth: 'none',
+        // espace pour input + nav
+        paddingBottom: INPUT_H + NAV_H + 8,
+      }}>
         {messages.length === 0 && (
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#7a7670' }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>💬</div>
@@ -83,33 +91,18 @@ export default function ChatPage() {
         {messages.map((msg, i) => {
           const me = isMe(msg)
           const username = msg.profiles?.username || 'Anonyme'
-          const h = hue(username)
-          const showAvatar = !me && (i === 0 || messages[i-1]?.user_id !== msg.user_id)
-          const showName = showAvatar
+          const showAvatar = !me && (i === 0 || messages[i - 1]?.user_id !== msg.user_id)
           return (
-            <div key={msg.id} style={{
-              display: 'flex',
-              flexDirection: me ? 'row-reverse' : 'row',
-              alignItems: 'flex-end',
-              gap: 8,
-            }}>
-              {/* Avatar */}
+            <div key={msg.id} style={{ display: 'flex', flexDirection: me ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 8 }}>
               {!me && (
-                <div style={{
-                  width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                  background: showAvatar ? `hsl(${h},40%,18%)` : 'transparent',
-                  border: showAvatar ? `1.5px solid hsl(${h},55%,40%)` : 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 500,
-                  color: `hsl(${h},80%,70%)`,
-                  marginBottom: 2,
-                }}>
-                  {showAvatar ? username[0].toUpperCase() : ''}
+                <div style={{ width: 28, flexShrink: 0 }}>
+                  {showAvatar && (
+                    <Avatar username={username} avatarUrl={msg.profiles?.avatar_url} size={28} />
+                  )}
                 </div>
               )}
-
               <div style={{ maxWidth: '72%', display: 'flex', flexDirection: 'column', gap: 2, alignItems: me ? 'flex-end' : 'flex-start' }}>
-                {showName && (
+                {showAvatar && !me && (
                   <div style={{ fontSize: 10, color: '#7a7670', marginLeft: 4 }}>{username}</div>
                 )}
                 <div style={{
@@ -131,23 +124,18 @@ export default function ChatPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
+      {/* Input — positionné juste AU-DESSUS de la nav */}
       <div style={{
-        padding: '10px 14px 28px',
+        position: 'fixed',
+        bottom: NAV_H,
+        left: 0, right: 0,
+        padding: '10px 14px 10px',
         borderTop: '1px solid rgba(255,255,255,0.07)',
         background: '#0d0d0d',
-        display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0,
+        display: 'flex', gap: 10, alignItems: 'center',
+        zIndex: 99,
       }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-          background: `hsl(${hue(profile?.username)},40%,18%)`,
-          border: `1.5px solid hsl(${hue(profile?.username)},55%,40%)`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 12, fontWeight: 500,
-          color: `hsl(${hue(profile?.username)},80%,70%)`,
-        }}>
-          {(profile?.username || '?')[0].toUpperCase()}
-        </div>
+        <Avatar username={profile?.username} avatarUrl={profile?.avatar_url} size={32} />
         <input
           ref={inputRef}
           value={text}
@@ -168,7 +156,7 @@ export default function ChatPage() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           transition: 'all .15s', flexShrink: 0,
         }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={text.trim() ? '#0d0d0d' : '#7a7670'} strokeWidth="2.5" strokeLinecap="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={text.trim() ? '#0d0d0d' : '#7a7670'} strokeWidth="2.5" strokeLinecap="round">
             <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
           </svg>
         </button>
