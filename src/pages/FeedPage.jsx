@@ -14,7 +14,14 @@ function timeAgo(dateStr) {
   return `il y a ${Math.floor(h / 24)}j`
 }
 
-function PinteCard({ pinte, index }) {
+function PinteCard({ pinte, index, isAdmin, onDelete }) {
+  async function deletePinte() {
+    if (!window.confirm('Supprimer cette pinte ?')) return
+    const { supabase } = await import('../lib/supabase.js')
+    await supabase.from('pintes').delete().eq('id', pinte.id)
+    onDelete(pinte.id)
+  }
+
   return (
     <div style={{
       background:'var(--card-bg)', border:'1px solid var(--border)',
@@ -69,6 +76,7 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
   const { profile } = useAuth()
+  const isAdmin = profile?.is_admin === true
 
   useEffect(() => {
     fetchFeed(); fetchTotal()
@@ -139,7 +147,7 @@ export default function FeedPage() {
             <p style={{ fontSize:14 }}>Pas encore de pinte. Sois le premier !</p>
           </div>
         ) : (
-          pintes.map((p, i) => <PinteCard key={p.id} pinte={p} index={i} />)
+          pintes.map((p, i) => <PinteCard key={p.id} pinte={p} index={i} isAdmin={isAdmin} onDelete={pid => setPintes(prev => prev.filter(x => x.id !== pid))} />)
         )}
       </div>
 
