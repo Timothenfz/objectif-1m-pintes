@@ -23,13 +23,30 @@ export default function ChatPage() {
 
   useEffect(() => {
     fetchMessages()
-    const channel = supabase.channel('chat')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages_chat' }, payload => {
-        setMessages(prev => [...prev, payload.new])
-        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
-      })
-      .subscribe()
-    return () => supabase.removeChannel(channel)
+
+    let channel
+    function subscribe() {
+      channel = supabase.channel('chat-' + Date.now())
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages_chat' }, payload => {
+          fetchMessages()
+          setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+        })
+        .subscribe((status) => {
+          if (status === 'CLOSED') setTimeout(subscribe, 2000)
+        })
+    }
+    subscribe()
+
+    // Recharger quand l'app revient au premier plan
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') fetchMessages()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [])
 
   async function fetchMessages() {
