@@ -54,7 +54,7 @@ export default function ChatPage() {
 
   const isMe = (msg) => msg.user_id === user?.id
   const INPUT_H = 70
-  const NAV_H = 64
+  const NAV_H = 76
   const HEADER_H = 88
 
   return (

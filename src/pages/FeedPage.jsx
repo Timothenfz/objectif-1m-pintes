@@ -17,7 +17,7 @@ function PinteCard({ pinte, index }) {
   const hue = (pinte.profiles?.username?.charCodeAt(0) || 0) * 15 % 360
   return (
     <div style={{
-      background:'#181818', border:'1px solid rgba(255,255,255,0.07)',
+      background:'var(--card-bg)', border:'1px solid var(--border)',
       borderRadius:20, overflow:'hidden',
       animation:`fadeUp 0.4s ${index * 0.06}s ease both`,
       opacity:0, animationFillMode:'forwards',
@@ -34,13 +34,13 @@ function PinteCard({ pinte, index }) {
           {(pinte.profiles?.username||'?')[0].toUpperCase()}
         </div>
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ fontSize:14, fontWeight:500, color:'#ede9e0' }}>{pinte.profiles?.username || 'Anonyme'}</div>
-          <div style={{ fontSize:11, color:'#7a7670', marginTop:1 }}>
+          <div style={{ fontSize:14, fontWeight:500, color:'var(--tx)' }}>{pinte.profiles?.username || 'Anonyme'}</div>
+          <div style={{ fontSize:11, color:'var(--tx2)', marginTop:1 }}>
             {pinte.lieu || 'Lieu inconnu'} · {timeAgo(pinte.created_at)}
           </div>
         </div>
         <div style={{
-          background:'#f5a623', color:'#0a0a0a',
+          background:'var(--am)', color:'#0a0a0a',
           fontFamily:'Bebas Neue,sans-serif', fontSize:17,
           padding:'4px 10px', borderRadius:20, letterSpacing:'.05em',
         }}>
@@ -49,14 +49,14 @@ function PinteCard({ pinte, index }) {
       </div>
 
       {/* Photo */}
-      <div style={{ aspectRatio:'4/3', background:'#222', overflow:'hidden' }}>
+      <div style={{ aspectRatio:'4/3', background:'var(--bg3)', overflow:'hidden' }}>
         <img src={pinte.photo_url} alt={`Pinte #${pinte.numero_global}`}
           style={{ width:'100%', height:'100%', objectFit:'cover' }} loading="lazy" />
       </div>
 
       {/* Type boisson */}
       {pinte.type_boisson && (
-        <div style={{ padding:'6px 14px 0', fontSize:11, color:'#7a7670', fontStyle:'italic' }}>
+        <div style={{ padding:'6px 14px 0', fontSize:11, color:'var(--tx2)', fontStyle:'italic' }}>
           {pinte.type_boisson}
         </div>
       )}
@@ -98,7 +98,7 @@ export default function FeedPage() {
   const pct = ((total / 1000000) * 100).toFixed(3)
 
   return (
-    <div style={{ minHeight:'100dvh', paddingBottom:90, background:'#0d0d0d' }}>
+    <div style={{ minHeight:'100dvh', paddingBottom:90, background:'var(--bg)' }}>
       {/* Header */}
       <div style={{
         padding:'52px 16px 16px',
@@ -107,21 +107,21 @@ export default function FeedPage() {
       }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end' }}>
           <div>
-            <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:13, color:'#f5a623', letterSpacing:'.08em' }}>OBJECTIF</div>
-            <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:34, color:'#fffdf5', lineHeight:.95 }}>1 MILLION</div>
-            <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:34, color:'#fffdf5', lineHeight:.95 }}>DE PINTES</div>
+            <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:13, color:'var(--am)', letterSpacing:'.08em' }}>OBJECTIF</div>
+            <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:34, color:'var(--foam)', lineHeight:.95 }}>1 MILLION</div>
+            <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:34, color:'var(--foam)', lineHeight:.95 }}>DE PINTES</div>
           </div>
           <div style={{ textAlign:'right' }}>
-            <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:28, color:'#f5a623', lineHeight:1 }}>
+            <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:28, color:'var(--am)', lineHeight:1 }}>
               {total.toLocaleString('fr-FR')}
             </div>
-            <div style={{ fontSize:10, color:'#7a7670' }}>/ 1 000 000</div>
+            <div style={{ fontSize:10, color:'var(--tx2)' }}>/ 1 000 000</div>
           </div>
         </div>
-        <div style={{ margin:'12px 0 4px', background:'#222', borderRadius:4, height:5, overflow:'hidden' }}>
+        <div style={{ margin:'12px 0 4px', background:'var(--bg3)', borderRadius:4, height:5, overflow:'hidden' }}>
           <div style={{ height:5, borderRadius:4, background:'linear-gradient(90deg,#c4841a,#ffc85a)', width:`${Math.max(parseFloat(pct),0.02)}%`, minWidth:4, transition:'width .5s ease' }} />
         </div>
-        <div style={{ fontSize:10, color:'#7a7670' }}>
+        <div style={{ fontSize:10, color:'var(--tx2)' }}>
           {pct}% de l'objectif · Salut {profile?.username} 👋
         </div>
       </div>
@@ -137,7 +137,7 @@ export default function FeedPage() {
             }} />
           ))
         ) : pintes.length === 0 ? (
-          <div style={{ textAlign:'center', padding:'60px 0', color:'#7a7670' }}>
+          <div style={{ textAlign:'center', padding:'60px 0', color:'var(--tx2)' }}>
             <div style={{ fontSize:48, marginBottom:12 }}>🍺</div>
             <p style={{ fontSize:14 }}>Pas encore de pinte. Sois le premier !</p>
           </div>

@@ -22,8 +22,8 @@ export default function Nav() {
         @keyframes pulse-fab { 0%,100%{box-shadow:0 4px 20px rgba(245,166,35,.5)} 50%{box-shadow:0 4px 28px rgba(245,166,35,.8)} }
       `}</style>
 
-      {/* Bouton flottant Poster */}
-      <button
+      {/* Bouton flottant Poster — caché sur /chat et /poster */}
+      {location.pathname !== '/chat' && location.pathname !== '/poster' && <button
         onClick={() => navigate('/poster')}
         style={{
           position: 'fixed', bottom: 74, right: 18,
@@ -39,13 +39,13 @@ export default function Nav() {
           <line x1="12" y1="5" x2="12" y2="19"/>
           <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-      </button>
+      </button>}
 
       {/* Nav */}
       <nav style={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
-        height: 64,
-        background: 'rgba(11,11,11,0.97)',
+        height: 76,
+        background: 'var(--nav-bg)',
         backdropFilter: 'blur(20px)',
         borderTop: '1px solid rgba(255,255,255,0.07)',
         zIndex: 100,
@@ -59,7 +59,7 @@ export default function Nav() {
                 onClick={() => navigate(tab.path)}
                 style={{
                   flexShrink: 0,
-                  minWidth: 64,
+                  minWidth: 70,
                   height: '100%',
                   display: 'flex', flexDirection: 'column',
                   alignItems: 'center', justifyContent: 'center',

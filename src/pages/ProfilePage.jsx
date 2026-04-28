@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { useLang } from '../hooks/useLang.jsx'
 import LangSwitcher from '../components/LangSwitcher.jsx'
+import ThemeSwitcher from '../components/ThemeSwitcher.jsx'
 import Avatar from '../components/Avatar.jsx'
 
 export default function ProfilePage() {
@@ -200,6 +201,7 @@ export default function ProfilePage() {
       <div style={{ padding: '0 12px 14px' }}>
         <div style={{ fontSize: 12, color: '#7a7670', marginBottom: 8, fontWeight: 500 }}>{t('profile_lang')}</div>
         <LangSwitcher />
+        <ThemeSwitcher style={{ marginTop: 8 }} />
       </div>
 
       {/* Galerie */}

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
-const NAV_HEIGHT = 64
+const NAV_HEIGHT = 76
 
 export default function CartePage() {
   const [pintes, setPintes] = useState([])
