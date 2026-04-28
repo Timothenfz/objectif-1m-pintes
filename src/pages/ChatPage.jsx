@@ -43,9 +43,13 @@ export default function ChatPage() {
     }
     document.addEventListener('visibilitychange', handleVisibility)
 
+    // Actualisation toutes les 5 secondes
+    const interval = setInterval(fetchMessages, 5000)
+
     return () => {
       if (channel) supabase.removeChannel(channel)
       document.removeEventListener('visibilitychange', handleVisibility)
+      clearInterval(interval)
     }
   }, [])
 
