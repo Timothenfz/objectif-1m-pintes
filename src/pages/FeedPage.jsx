@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth.jsx'
 import Reactions from '../components/Reactions.jsx'
+import Avatar from '../components/Avatar.jsx'
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -14,7 +15,6 @@ function timeAgo(dateStr) {
 }
 
 function PinteCard({ pinte, index }) {
-  const hue = (pinte.profiles?.username?.charCodeAt(0) || 0) * 15 % 360
   return (
     <div style={{
       background:'var(--card-bg)', border:'1px solid var(--border)',
@@ -24,15 +24,12 @@ function PinteCard({ pinte, index }) {
     }}>
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px' }}>
-        <div style={{
-          width:38, height:38, borderRadius:'50%', flexShrink:0,
-          background:`hsl(${hue},40%,16%)`,
-          border:`2px solid hsl(${hue},60%,40%)`,
-          display:'flex', alignItems:'center', justifyContent:'center',
-          fontSize:14, fontWeight:500, color:`hsl(${hue},80%,70%)`,
-        }}>
-          {(pinte.profiles?.username||'?')[0].toUpperCase()}
-        </div>
+        <Avatar
+          username={pinte.profiles?.username}
+          avatarUrl={pinte.profiles?.avatar_url}
+          size={38}
+          border
+        />
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ fontSize:14, fontWeight:500, color:'var(--tx)' }}>{pinte.profiles?.username || 'Anonyme'}</div>
           <div style={{ fontSize:11, color:'var(--tx2)', marginTop:1 }}>
@@ -83,7 +80,7 @@ export default function FeedPage() {
 
   async function fetchFeed() {
     const { data } = await supabase.from('pintes')
-      .select('*, profiles(username, total_perso)')
+      .select('*, profiles(username, total_perso, avatar_url)')
       .order('created_at', { ascending:false })
       .limit(30)
     setPintes(data || [])
