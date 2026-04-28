@@ -37,15 +37,15 @@ export default function VillesPage() {
     <div style={{ minHeight: '100dvh', paddingBottom: 90 }}>
       <div style={{ padding: '56px 20px 20px' }}>
         <h2 style={{ fontSize: 36, fontFamily: 'Bebas Neue, sans-serif', color: '#fffdf5' }}>VILLES</h2>
-        <p style={{ fontSize: 13, color: '#7a7670', marginTop: 2 }}>
+        <p style={{ fontSize: 13, color: 'var(--tx2)', marginTop: 2 }}>
           Classement des villes les plus assoiffées
         </p>
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#7a7670' }}>Chargement...</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx2)' }}>Chargement...</div>
       ) : villes.length === 0 ? (
-        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#7a7670' }}>
+        <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--tx2)' }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>🗺</div>
           <p style={{ fontSize: 14 }}>Aucune ville renseignée pour l'instant.</p>
           <p style={{ fontSize: 12, marginTop: 6 }}>Ajoute ta ville dans ton profil !</p>
@@ -61,9 +61,9 @@ export default function VillesPage() {
                 const labels = ['🥈', '🥇', '🥉']
                 return (
                   <div key={v.ville} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: '#ede9e0', textAlign: 'center', fontSize: 12 }}>{v.ville}</div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)', textAlign: 'center' }}>{v.ville}</div>
                     <div style={{ fontSize: 20 }}>{getFlag(v.ville)}</div>
-                    <div style={{ fontSize: 11, color: colors[i], fontFamily: 'Bebas Neue, sans-serif', fontSize: 16 }}>{v.total_pintes} 🍺</div>
+                    <div style={{ fontSize: 16, color: colors[i], fontFamily: 'Bebas Neue, sans-serif' }}>{v.total_pintes} 🍺</div>
                     <div style={{
                       width: '100%', height: heights[i],
                       background: `rgba(${i === 1 ? '245,166,35' : '255,255,255'},0.08)`,
@@ -81,29 +81,29 @@ export default function VillesPage() {
           )}
 
           {/* Liste complète */}
-          <div style={{ background: '#181818', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--card-bg)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' }}>
             {villes.map((v, i) => (
               <div key={v.ville} style={{
                 display: 'flex', alignItems: 'center', gap: 12,
                 padding: '12px 16px',
                 borderBottom: i < villes.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
               }}>
-                <div style={{ width: 24, textAlign: 'center', fontFamily: 'Bebas Neue, sans-serif', fontSize: 14, color: '#7a7670', flexShrink: 0 }}>
+                <div style={{ width: 24, textAlign: 'center', fontFamily: 'Bebas Neue, sans-serif', fontSize: 14, color: 'var(--tx2)', flexShrink: 0 }}>
                   {i < 3 ? ['🥇','🥈','🥉'][i] : i + 1}
                 </div>
                 <div style={{ fontSize: 20, flexShrink: 0 }}>{getFlag(v.ville)}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: '#ede9e0' }}>{v.ville}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)' }}>{v.ville}</div>
                   <div style={{ height: 3, background: '#222', borderRadius: 2, marginTop: 5 }}>
                     <div style={{ height: 3, borderRadius: 2, background: '#f5a623', width: `${Math.round(v.total_pintes / max * 100)}%`, transition: 'width .5s ease' }} />
                   </div>
-                  <div style={{ fontSize: 11, color: '#7a7670', marginTop: 3 }}>
+                  <div style={{ fontSize: 11, color: 'var(--tx2)', marginTop: 3 }}>
                     {v.nb_membres} membre{v.nb_membres > 1 ? 's' : ''}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: 22, color: i === 0 ? '#f5a623' : '#ede9e0', lineHeight: 1 }}>{v.total_pintes}</div>
-                  <div style={{ fontSize: 10, color: '#7a7670' }}>pintes</div>
+                  <div style={{ fontSize: 10, color: 'var(--tx2)' }}>pintes</div>
                 </div>
               </div>
             ))}
