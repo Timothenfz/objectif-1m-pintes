@@ -84,7 +84,21 @@ export default function FeedPage() {
     const channel = supabase.channel('pintes-feed')
       .on('postgres_changes', { event:'INSERT', schema:'public', table:'pintes' }, () => { fetchFeed(); fetchTotal() })
       .subscribe()
-    return () => supabase.removeChannel(channel)
+
+    // Rechargement auto toutes les 10s en backup
+    const interval = setInterval(() => { fetchFeed(); fetchTotal() }, 10000)
+
+    // Recharger quand l'app revient au premier plan
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') { fetchFeed(); fetchTotal() }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      supabase.removeChannel(channel)
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [])
 
   async function fetchFeed() {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth.jsx'
 import MilestonePopup, { checkMilestone } from '../components/MilestonePopup.jsx'
+import { BADGES } from '../lib/badges.js'
 
 function getGPS() {
   return new Promise((resolve) => {
@@ -13,6 +14,50 @@ function getGPS() {
       { timeout: 5000 }
     )
   })
+}
+
+async function checkAndUnlockBadges(userId, newProfile, pinte) {
+  // Récupérer les badges déjà débloqués
+  const { data: existing } = await supabase
+    .from('badges_utilisateur')
+    .select('badge_id')
+    .eq('user_id', userId)
+  const existingIds = new Set((existing || []).map(b => b.badge_id))
+
+  // Construire le state pour vérifier les badges
+  const hour = new Date(pinte.created_at || Date.now()).getHours()
+  const dayOfWeek = new Date().getDay()
+
+  const state = {
+    total_perso: newProfile?.total_perso || 0,
+    streak: 1, // simplifié
+    hasEarlyPost: hour < 10,
+    hasNightPost: hour >= 0 && hour < 4,
+    hasHappyHour: hour >= 17 && hour < 19,
+    hasApero: hour >= 12 && hour < 14,
+    nbVilles: 1,
+    maxSameLieu: 1,
+    hasFriday: dayOfWeek === 5 && hour >= 18,
+    weekendPintes: 1,
+    firstOfDay: 1,
+    canettes: 0,
+    pinteMaison: 0,
+    referrals: 0,
+    isFirst: false,
+    hasWhiteNight: hour >= 3 && hour < 5,
+    hasGoldenPint: pinte.numero_global === 1000 || pinte.numero_global === 10000,
+    chatMessages: 0,
+    reactions: 0,
+    commentaires: 0,
+  }
+
+  const toUnlock = BADGES.filter(b => !existingIds.has(b.id) && b.check(state))
+  
+  if (toUnlock.length > 0) {
+    await supabase.from('badges_utilisateur').insert(
+      toUnlock.map(b => ({ user_id: userId, badge_id: b.id }))
+    )
+  }
 }
 
 const RULES = [
@@ -78,6 +123,14 @@ export default function PostPage() {
     const newCount = prevCount + 1
     const hit = checkMilestone(prevCount, newCount)
     if (hit) setMilestone(hit)
+
+    // Vérifier et débloquer les badges
+    const updatedProfile = { ...profile, total_perso: newCount }
+    await checkAndUnlockBadges(user.id, updatedProfile, {
+      numero_global: numero,
+      created_at: new Date().toISOString(),
+    })
+
     setEtape('done')
     setTimeout(() => { if (!hit) navigate('/') }, 1000)
     setLoading(false)
