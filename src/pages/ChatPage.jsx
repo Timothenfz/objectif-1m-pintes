@@ -112,30 +112,32 @@ export default function ChatPage() {
         {messages.map((msg, i) => {
           const me = isMe(msg)
           const username = msg.profiles?.username || 'Anonyme'
-          const showAvatar = !me && (i === 0 || messages[i - 1]?.user_id !== msg.user_id)
+          const isNewSender = i === 0 || messages[i - 1]?.user_id !== msg.user_id
           return (
-            <div key={msg.id} style={{ display: 'flex', flexDirection: me ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 8 }}>
+            <div key={msg.id} style={{ display: 'flex', flexDirection: me ? 'row-reverse' : 'row', alignItems: 'flex-start', gap: 8, marginTop: isNewSender && i > 0 ? 6 : 2 }}>
+              {/* Avatar toujours visible pour les autres */}
               {!me && (
-                <div style={{ width: 28, flexShrink: 0 }}>
-                  {showAvatar && (
-                    <Avatar username={username} avatarUrl={msg.profiles?.avatar_url} size={28} />
-                  )}
+                <div style={{ flexShrink: 0, marginTop: isNewSender ? 16 : 0, opacity: isNewSender ? 1 : 0 }}>
+                  <Avatar username={username} avatarUrl={msg.profiles?.avatar_url} size={32} />
                 </div>
               )}
               <div style={{ maxWidth: '72%', display: 'flex', flexDirection: 'column', gap: 2, alignItems: me ? 'flex-end' : 'flex-start' }}>
-                {showAvatar && !me && (
-                  <div style={{ fontSize: 10, color: 'var(--tx2)', marginLeft: 4 }}>{username}</div>
+                {/* Pseudo au-dessus du premier message d'une série */}
+                {isNewSender && !me && (
+                  <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--am)', marginLeft: 2, marginBottom: 1 }}>{username}</div>
                 )}
                 <div style={{
                   padding: '9px 13px',
-                  borderRadius: me ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                  background: me ? '#f5a623' : '#222',
-                  color: me ? '#0d0d0d' : '#ede9e0',
+                  borderRadius: me
+                    ? (isNewSender ? '18px 18px 4px 18px' : '18px 18px 4px 18px')
+                    : (isNewSender ? '4px 18px 18px 18px' : '4px 18px 18px 18px'),
+                  background: me ? 'var(--am)' : 'var(--msg-other)',
+                  color: me ? '#0d0d0d' : 'var(--msg-other-tx)',
                   fontSize: 13, lineHeight: 1.45,
                 }}>
                   {msg.texte}
                 </div>
-                <div style={{ fontSize: 9, color: 'var(--tx3)', marginLeft: 4, marginRight: 4 }}>
+                <div style={{ fontSize: 9, color: 'var(--tx3)', marginLeft: 2, marginRight: 2 }}>
                   {timeAgo(msg.created_at)}
                 </div>
               </div>
