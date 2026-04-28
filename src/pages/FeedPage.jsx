@@ -102,10 +102,12 @@ export default function FeedPage() {
   }, [])
 
   async function fetchFeed() {
-    const { data } = await supabase.from('pintes')
+    console.log('fetchFeed called')
+    const { data, error } = await supabase.from('pintes')
       .select('*, profiles(username, total_perso, avatar_url)')
       .order('created_at', { ascending:false })
       .limit(30)
+    console.log('pintes:', data?.length, 'error:', error)
     setPintes(data || [])
     setLoading(false)
   }
