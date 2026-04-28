@@ -5,14 +5,20 @@ import { useLang } from '../hooks/useLang.jsx'
 import LangSwitcher from '../components/LangSwitcher.jsx'
 
 export default function ProfilePage() {
-  const { profile, signOut } = useAuth()
+  const { profile, signOut, fetchProfile } = useAuth()
   const { t } = useLang()
   const [pintes, setPintes] = useState([])
   const [loading, setLoading] = useState(true)
   const [totalGlobal, setTotalGlobal] = useState(0)
+
   const [ville, setVille] = useState(profile?.ville || '')
   const [villeLoading, setVilleLoading] = useState(false)
   const [villeSaved, setVilleSaved] = useState(false)
+
+  const [pseudo, setPseudo] = useState(profile?.username || '')
+  const [pseudoLoading, setPseudoLoading] = useState(false)
+  const [pseudoSaved, setPseudoSaved] = useState(false)
+  const [pseudoError, setPseudoError] = useState('')
 
   useEffect(() => { if (profile?.id) fetchMyPintes(); fetchTotal() }, [profile])
 
@@ -35,13 +41,44 @@ export default function ProfilePage() {
     setTimeout(() => setVilleSaved(false), 2000)
   }
 
+  async function savePseudo() {
+    if (!pseudo.trim()) return
+    if (pseudo.trim() === profile.username) return
+    setPseudoLoading(true); setPseudoError('')
+    const { error } = await supabase
+      .from('profiles')
+      .update({ username: pseudo.trim() })
+      .eq('id', profile.id)
+    if (error) {
+      setPseudoError(error.code === '23505' ? 'Ce pseudo est déjà pris' : 'Erreur, réessaie')
+    } else {
+      await fetchProfile(profile.id)
+      setPseudoSaved(true)
+      setTimeout(() => setPseudoSaved(false), 2000)
+    }
+    setPseudoLoading(false)
+  }
+
   const joinedDays = profile?.date_arrivee
     ? Math.floor((Date.now() - new Date(profile.date_arrivee).getTime()) / 86400000) : 0
   const pctContrib = totalGlobal > 0 ? ((profile?.total_perso||0) / totalGlobal * 100).toFixed(1) : '0'
   const daysLabel = joinedDays <= 1 ? t('profile_days') : t('profile_days_pl')
 
+  const inputStyle = {
+    flex:1, padding:'10px 12px', background:'#181818',
+    border:'1px solid rgba(255,255,255,0.07)', borderRadius:9,
+    color:'#ede9e0', fontSize:13, fontFamily:'DM Sans,sans-serif', outline:'none',
+  }
+  const saveBtn = (saved, loading, onClick) => ({
+    padding:'10px 14px', background: saved ? '#22c55e' : '#f5a623',
+    color:'#0d0d0d', borderRadius:9, fontWeight:500, fontSize:12,
+    border:'none', cursor:'pointer', fontFamily:'DM Sans,sans-serif',
+    whiteSpace:'nowrap', transition:'all .2s',
+  })
+
   return (
     <div style={{ minHeight:'100dvh', paddingBottom:90, background:'#0d0d0d' }}>
+      {/* Header */}
       <div style={{ padding:'52px 16px 20px', textAlign:'center', borderBottom:'1px solid rgba(255,255,255,0.07)', background:'linear-gradient(180deg,rgba(245,166,35,0.06) 0%,transparent 100%)' }}>
         <div style={{ width:72, height:72, borderRadius:'50%', margin:'0 auto 12px', background:'rgba(245,166,35,0.12)', border:'3px solid #f5a623', display:'flex', alignItems:'center', justifyContent:'center', fontSize:28, fontWeight:500, color:'#f5a623' }}>
           {(profile?.username||'?')[0].toUpperCase()}
@@ -52,6 +89,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Stats */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(2,minmax(0,1fr))', gap:8, padding:'14px 12px 10px' }}>
         <div style={{ background:'#181818', border:'1px solid rgba(255,255,255,0.07)', borderRadius:11, padding:'12px 10px', textAlign:'center' }}>
           <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:26, color:'#f5a623', lineHeight:1 }}>{profile?.total_perso||0}</div>
@@ -67,17 +105,42 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Pseudo */}
+      <div style={{ padding:'4px 12px 12px' }}>
+        <div style={{ fontSize:12, color:'#7a7670', marginBottom:6, fontWeight:500 }}>
+          {t('profile_lang') === 'Language' ? 'Username' : 'Pseudo'}
+        </div>
+        <div style={{ display:'flex', gap:7 }}>
+          <input
+            value={pseudo}
+            onChange={e => { setPseudo(e.target.value); setPseudoError('') }}
+            onKeyDown={e => e.key === 'Enter' && savePseudo()}
+            placeholder={profile?.username}
+            maxLength={20}
+            style={inputStyle}
+          />
+          <button onClick={savePseudo} disabled={pseudoLoading || pseudo.trim() === profile?.username} style={{
+            ...saveBtn(pseudoSaved, pseudoLoading),
+            opacity: pseudo.trim() === profile?.username ? 0.4 : 1,
+          }}>
+            {pseudoLoading ? '...' : pseudoSaved ? '✓' : t('profile_save')}
+          </button>
+        </div>
+        {pseudoError && <div style={{ fontSize:11, color:'#f87171', marginTop:5 }}>{pseudoError}</div>}
+      </div>
+
       {/* Ville */}
       <div style={{ padding:'4px 12px 12px' }}>
         <div style={{ fontSize:12, color:'#7a7670', marginBottom:6, fontWeight:500 }}>{t('profile_city')}</div>
         <div style={{ display:'flex', gap:7 }}>
-          <input value={ville} onChange={e=>setVille(e.target.value)} placeholder={t('profile_city_placeholder')}
-            style={{ flex:1, padding:'10px 12px', background:'#181818', border:'1px solid rgba(255,255,255,0.07)', borderRadius:9, color:'#ede9e0', fontSize:13, fontFamily:'DM Sans,sans-serif', outline:'none' }} />
-          <button onClick={saveVille} disabled={villeLoading} style={{
-            padding:'10px 14px', background: villeSaved ? '#22c55e' : '#f5a623',
-            color:'#0d0d0d', borderRadius:9, fontWeight:500, fontSize:12,
-            border:'none', cursor:'pointer', fontFamily:'DM Sans,sans-serif', whiteSpace:'nowrap', transition:'all .2s',
-          }}>
+          <input
+            value={ville}
+            onChange={e => setVille(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && saveVille()}
+            placeholder={t('profile_city_placeholder')}
+            style={inputStyle}
+          />
+          <button onClick={saveVille} disabled={villeLoading} style={saveBtn(villeSaved, villeLoading)}>
             {villeLoading ? '...' : villeSaved ? t('profile_saved') : t('profile_save')}
           </button>
         </div>
@@ -106,6 +169,7 @@ export default function ProfilePage() {
         )}
       </div>
 
+      {/* Déconnexion */}
       <div style={{ padding:'16px 12px 0' }}>
         <button onClick={signOut} style={{ width:'100%', padding:'12px 0', background:'transparent', border:'1px solid rgba(255,255,255,0.12)', borderRadius:10, color:'#7a7670', fontSize:13, fontFamily:'DM Sans,sans-serif', cursor:'pointer' }}>
           {t('profile_logout')}

@@ -184,3 +184,34 @@ select
   array_agg(user_id) as user_ids
 from public.reactions
 group by pinte_id, emoji;
+
+-- ═══════════════════════════════
+-- Chat, Badges, GPS
+-- ═══════════════════════════════
+
+-- Messages chat
+create table public.messages_chat (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  texte text not null check(char_length(texte) <= 500),
+  created_at timestamptz default now()
+);
+alter table public.messages_chat enable row level security;
+create policy "Messages visibles par tous" on public.messages_chat for select using (true);
+create policy "Utilisateur envoie message" on public.messages_chat for insert with check (auth.uid() = user_id);
+
+-- Badges débloqués
+create table public.badges_utilisateur (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  badge_id text not null,
+  unlocked_at timestamptz default now(),
+  unique(user_id, badge_id)
+);
+alter table public.badges_utilisateur enable row level security;
+create policy "Badges visibles par tous" on public.badges_utilisateur for select using (true);
+create policy "Système insère badges" on public.badges_utilisateur for insert with check (true);
+
+-- GPS sur les pintes
+alter table public.pintes add column if not exists latitude float;
+alter table public.pintes add column if not exists longitude float;
