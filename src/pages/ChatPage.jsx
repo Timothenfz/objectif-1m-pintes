@@ -58,14 +58,14 @@ export default function ChatPage() {
   const HEADER_H = 88
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#0d0d0d', overflow: 'hidden' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg)', overflow: 'hidden' }}>
       {/* Header */}
-      <div style={{ padding: '52px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)', background: '#0d0d0d', flexShrink: 0 }}>
+      <div style={{ padding: '52px 16px 12px', borderBottom: '1px solid var(--border)', background: 'var(--bg)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ fontSize: 24 }}>💬</div>
           <div>
-            <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 26, color: '#ede9e0', lineHeight: 1 }}>CHAT</div>
-            <div style={{ fontSize: 11, color: '#7a7670' }}>Chat communautaire</div>
+            <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 26, color: 'var(--tx)', lineHeight: 1 }}>CHAT</div>
+            <div style={{ fontSize: 11, color: 'var(--tx2)' }}>Chat communautaire</div>
           </div>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function ChatPage() {
         paddingBottom: INPUT_H + NAV_H + 8,
       }}>
         {messages.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: '#7a7670' }}>
+          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--tx2)' }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>💬</div>
             <p style={{ fontSize: 14 }}>Sois le premier à écrire !</p>
           </div>
@@ -103,7 +103,7 @@ export default function ChatPage() {
               )}
               <div style={{ maxWidth: '72%', display: 'flex', flexDirection: 'column', gap: 2, alignItems: me ? 'flex-end' : 'flex-start' }}>
                 {showAvatar && !me && (
-                  <div style={{ fontSize: 10, color: '#7a7670', marginLeft: 4 }}>{username}</div>
+                  <div style={{ fontSize: 10, color: 'var(--tx2)', marginLeft: 4 }}>{username}</div>
                 )}
                 <div style={{
                   padding: '9px 13px',
@@ -114,7 +114,7 @@ export default function ChatPage() {
                 }}>
                   {msg.texte}
                 </div>
-                <div style={{ fontSize: 9, color: '#3a3834', marginLeft: 4, marginRight: 4 }}>
+                <div style={{ fontSize: 9, color: 'var(--tx3)', marginLeft: 4, marginRight: 4 }}>
                   {timeAgo(msg.created_at)}
                 </div>
               </div>
@@ -130,8 +130,8 @@ export default function ChatPage() {
         bottom: NAV_H,
         left: 0, right: 0,
         padding: '10px 14px 10px',
-        borderTop: '1px solid rgba(255,255,255,0.07)',
-        background: '#0d0d0d',
+        borderTop: '1px solid var(--border)',
+        background: 'var(--bg)',
         display: 'flex', gap: 10, alignItems: 'center',
         zIndex: 99,
       }}>
@@ -144,8 +144,8 @@ export default function ChatPage() {
           placeholder="Écrire un message..."
           style={{
             flex: 1, padding: '10px 14px',
-            background: '#181818', border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 22, color: '#ede9e0', fontSize: 13,
+            background: 'var(--card-bg)', border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 22, color: 'var(--tx)', fontSize: 13,
             fontFamily: 'DM Sans,sans-serif', outline: 'none',
           }}
         />

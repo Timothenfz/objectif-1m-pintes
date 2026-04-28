@@ -80,27 +80,27 @@ export default function CartePage() {
   const HEADER_H = 90
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#0d0d0d', overflow: 'hidden' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg)', overflow: 'hidden' }}>
       {/* Header fixe */}
-      <div style={{ padding: '52px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0, background: '#0d0d0d', zIndex: 10 }}>
+      <div style={{ padding: '52px 16px 12px', borderBottom: '1px solid var(--border)', flexShrink: 0, background: 'var(--bg)', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ fontSize: 24 }}>🗺</div>
             <div>
-              <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 26, color: '#ede9e0', lineHeight: 1 }}>CARTE</div>
-              <div style={{ fontSize: 11, color: '#7a7670' }}>{pintes.length} pinte{pintes.length !== 1 ? 's' : ''} géolocalisée{pintes.length !== 1 ? 's' : ''}</div>
+              <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 26, color: 'var(--tx)', lineHeight: 1 }}>CARTE</div>
+              <div style={{ fontSize: 11, color: 'var(--tx2)' }}>{pintes.length} pinte{pintes.length !== 1 ? 's' : ''} géolocalisée{pintes.length !== 1 ? 's' : ''}</div>
             </div>
           </div>
-          <button onClick={fetchPintes} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: '#7a7670', cursor: 'pointer', fontSize: 16 }}>↺</button>
+          <button onClick={fetchPintes} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 10px', color: 'var(--tx2)', cursor: 'pointer', fontSize: 16 }}>↺</button>
         </div>
       </div>
 
       {/* Carte — hauteur = 100dvh - header - nav */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden', marginBottom: NAV_HEIGHT }}>
         {pintes.length === 0 && !loading ? (
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#7a7670', gap: 12 }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--tx2)', gap: 12 }}>
             <div style={{ fontSize: 52 }}>📍</div>
-            <div style={{ fontSize: 16, fontWeight: 500, color: '#ede9e0' }}>Aucun lieu enregistré</div>
+            <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--tx)' }}>Aucun lieu enregistré</div>
             <div style={{ fontSize: 13, textAlign: 'center', maxWidth: 260, lineHeight: 1.5 }}>
               Active le GPS lors de ton prochain post pour apparaître sur la carte !
             </div>

@@ -24,19 +24,19 @@ export default function BadgesPage() {
   const unlocked = BADGES.filter(b => unlockedIds.has(b.id)).length
 
   return (
-    <div style={{ minHeight: '100dvh', paddingBottom: 90, background: '#0d0d0d' }}>
+    <div style={{ minHeight: '100dvh', paddingBottom: 90, background: 'var(--bg)' }}>
       {/* Header */}
-      <div style={{ padding: '52px 16px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <div style={{ padding: '52px 16px 16px', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
           <div style={{ fontSize: 32 }}>🏅</div>
           <div>
-            <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 32, color: '#ede9e0', lineHeight: 1 }}>BADGES</div>
-            <div style={{ fontSize: 11, color: '#7a7670', marginTop: 2 }}>{unlocked} / {BADGES.length} débloqués</div>
+            <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 32, color: 'var(--tx)', lineHeight: 1 }}>BADGES</div>
+            <div style={{ fontSize: 11, color: 'var(--tx2)', marginTop: 2 }}>{unlocked} / {BADGES.length} débloqués</div>
           </div>
         </div>
 
         {/* Progress */}
-        <div style={{ background: '#222', borderRadius: 4, height: 6, overflow: 'hidden', marginBottom: 4 }}>
+        <div style={{ background: 'var(--bg3)', borderRadius: 4, height: 6, overflow: 'hidden', marginBottom: 4 }}>
           <div style={{
             height: 6, borderRadius: 4,
             background: 'linear-gradient(90deg,#c4841a,#ffc85a)',
@@ -44,7 +44,7 @@ export default function BadgesPage() {
             transition: 'width .5s ease',
           }} />
         </div>
-        <div style={{ fontSize: 10, color: '#7a7670' }}>{Math.round(unlocked / BADGES.length * 100)}% complété</div>
+        <div style={{ fontSize: 10, color: 'var(--tx2)' }}>{Math.round(unlocked / BADGES.length * 100)}% complété</div>
       </div>
 
       {/* Filtres catégories */}
@@ -71,7 +71,7 @@ export default function BadgesPage() {
           return (
             <div key={badge.id} style={{
               background: unlocked ? colors.bg : 'rgba(255,255,255,0.03)',
-              border: `1px solid ${unlocked ? colors.border : 'rgba(255,255,255,0.07)'}`,
+              border: `1px solid ${unlocked ? colors.border : 'var(--border)'}`,
               borderRadius: 14, padding: '14px 12px',
               opacity: unlocked ? 1 : 0.5,
               transition: 'all .2s',
@@ -86,7 +86,7 @@ export default function BadgesPage() {
               <div style={{ fontSize: 13, fontWeight: 500, color: unlocked ? '#ede9e0' : '#4a4742', textAlign: 'center', marginBottom: 4 }}>
                 {badge.name_fr}
               </div>
-              <div style={{ fontSize: 11, color: '#7a7670', textAlign: 'center', lineHeight: 1.4 }}>
+              <div style={{ fontSize: 11, color: 'var(--tx2)', textAlign: 'center', lineHeight: 1.4 }}>
                 {badge.desc_fr}
               </div>
               {unlocked && (
