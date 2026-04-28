@@ -143,6 +143,22 @@ export default function FeedPage() {
         )}
       </div>
 
+
+      {/* Bandeau prévention alcool */}
+      <div style={{
+        margin: '16px 14px 0',
+        padding: '10px 14px',
+        borderRadius: 10,
+        background: 'var(--tx)',
+        color: 'var(--bg)',
+        fontSize: 11,
+        lineHeight: 1.5,
+        textAlign: 'center',
+        opacity: 0.85,
+      }}>
+        🚗 <strong>L'abus d'alcool est dangereux pour la santé.</strong> À consommer avec modération. Ne pas boire et conduire.
+      </div>
+
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
         @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
