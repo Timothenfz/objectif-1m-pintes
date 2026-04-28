@@ -7,7 +7,6 @@ import FeedPage from './pages/FeedPage.jsx'
 import RankingPage from './pages/RankingPage.jsx'
 import PostPage from './pages/PostPage.jsx'
 import ProfilePage from './pages/ProfilePage.jsx'
-import VillesPage from './pages/VillesPage.jsx'
 import BadgesPage from './pages/BadgesPage.jsx'
 import ChatPage from './pages/ChatPage.jsx'
 import CartePage from './pages/CartePage.jsx'
@@ -37,7 +36,6 @@ function AppContent() {
         <Route path="/" element={<ProtectedRoute><FeedPage /></ProtectedRoute>} />
         <Route path="/classement" element={<ProtectedRoute><RankingPage /></ProtectedRoute>} />
         <Route path="/poster" element={<ProtectedRoute><PostPage /></ProtectedRoute>} />
-        <Route path="/villes" element={<ProtectedRoute><VillesPage /></ProtectedRoute>} />
         <Route path="/carte" element={<ProtectedRoute><CartePage /></ProtectedRoute>} />
         <Route path="/badges" element={<ProtectedRoute><BadgesPage /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
