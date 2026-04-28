@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth.jsx'
 import Reactions from '../components/Reactions.jsx'
 import Avatar from '../components/Avatar.jsx'
+import NotifBell from '../components/NotifBell.jsx'
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime()

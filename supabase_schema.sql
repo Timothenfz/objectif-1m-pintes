@@ -215,3 +215,68 @@ create policy "Système insère badges" on public.badges_utilisateur for insert 
 -- GPS sur les pintes
 alter table public.pintes add column if not exists latitude float;
 alter table public.pintes add column if not exists longitude float;
+
+-- ═══════════════════════════════
+-- Notifications in-app
+-- ═══════════════════════════════
+create table if not exists public.notifications (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  type text not null, -- 'reaction', 'comment', 'milestone', 'defi', 'podium'
+  titre text not null,
+  message text not null,
+  lien text, -- route vers laquelle naviguer
+  lu boolean default false,
+  created_at timestamptz default now()
+);
+alter table public.notifications enable row level security;
+create policy "Notifs visibles par le proprio" on public.notifications
+  for select using (auth.uid() = user_id);
+create policy "Systeme insere notifs" on public.notifications
+  for insert with check (true);
+create policy "Proprio marque comme lu" on public.notifications
+  for update using (auth.uid() = user_id);
+
+-- ═══════════════════════════════
+-- Amis (follow system)
+-- ═══════════════════════════════
+create table if not exists public.amis (
+  id uuid default gen_random_uuid() primary key,
+  follower_id uuid references public.profiles(id) on delete cascade not null,
+  following_id uuid references public.profiles(id) on delete cascade not null,
+  created_at timestamptz default now(),
+  unique(follower_id, following_id)
+);
+alter table public.amis enable row level security;
+create policy "Amis visibles par tous" on public.amis for select using (true);
+create policy "Utilisateur follow" on public.amis for insert with check (auth.uid() = follower_id);
+create policy "Utilisateur unfollow" on public.amis for delete using (auth.uid() = follower_id);
+
+-- ═══════════════════════════════
+-- Défis hebdomadaires
+-- ═══════════════════════════════
+create table if not exists public.defis (
+  id uuid default gen_random_uuid() primary key,
+  titre text not null,
+  description text not null,
+  type text not null, -- 'nb_pintes', 'nb_villes', 'heure', 'streak'
+  objectif integer not null,
+  semaine_debut date not null,
+  badge_id text,
+  created_at timestamptz default now()
+);
+create table if not exists public.defi_participations (
+  id uuid default gen_random_uuid() primary key,
+  defi_id uuid references public.defis(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  progres integer default 0,
+  complete boolean default false,
+  created_at timestamptz default now(),
+  unique(defi_id, user_id)
+);
+alter table public.defis enable row level security;
+alter table public.defi_participations enable row level security;
+create policy "Defis visibles par tous" on public.defis for select using (true);
+create policy "Participations visibles" on public.defi_participations for select using (true);
+create policy "Utilisateur participe" on public.defi_participations for insert with check (auth.uid() = user_id);
+create policy "Utilisateur met a jour" on public.defi_participations for update using (auth.uid() = user_id);

@@ -7,9 +7,11 @@ import FeedPage from './pages/FeedPage.jsx'
 import RankingPage from './pages/RankingPage.jsx'
 import PostPage from './pages/PostPage.jsx'
 import ProfilePage from './pages/ProfilePage.jsx'
+import CartePage from './pages/CartePage.jsx'
 import BadgesPage from './pages/BadgesPage.jsx'
 import ChatPage from './pages/ChatPage.jsx'
-import CartePage from './pages/CartePage.jsx'
+import AmisPage from './pages/AmisPage.jsx'
+import DefiPage from './pages/DefiPage.jsx'
 import Nav from './components/Nav.jsx'
 
 function ProtectedRoute({ children }) {
@@ -23,6 +25,7 @@ function Loader() {
   return (
     <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'100dvh',background:'var(--bg)' }}>
       <div style={{ width:40,height:40,borderRadius:'50%',border:'2px solid var(--border)',borderTopColor:'var(--am)',animation:'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 }
@@ -39,6 +42,8 @@ function AppContent() {
         <Route path="/carte" element={<ProtectedRoute><CartePage /></ProtectedRoute>} />
         <Route path="/badges" element={<ProtectedRoute><BadgesPage /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+        <Route path="/amis" element={<ProtectedRoute><AmisPage /></ProtectedRoute>} />
+        <Route path="/defis" element={<ProtectedRoute><DefiPage /></ProtectedRoute>} />
         <Route path="/profil" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       </Routes>
       {user && <Nav />}

@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth.jsx'
+import MilestonePopup, { checkMilestone } from '../components/MilestonePopup.jsx'
 
 function getGPS() {
   return new Promise((resolve) => {
@@ -30,6 +31,7 @@ export default function PostPage() {
   const [error, setError] = useState('')
   const [gpsOn, setGpsOn] = useState(true)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [milestone, setMilestone] = useState(null)
   const fileRef = useRef()
   const navigate = useNavigate()
   const { user, profile, fetchProfile } = useAuth()
@@ -71,9 +73,13 @@ export default function PostPage() {
     })
     if (insertError) { setError(insertError.message); setLoading(false); setEtape(''); return }
 
+    const prevCount = profile?.total_perso || 0
     await fetchProfile(user.id)
+    const newCount = prevCount + 1
+    const hit = checkMilestone(prevCount, newCount)
+    if (hit) setMilestone(hit)
     setEtape('done')
-    setTimeout(() => navigate('/'), 1000)
+    setTimeout(() => { if (!hit) navigate('/') }, 1000)
     setLoading(false)
   }
 
@@ -198,6 +204,8 @@ export default function PostPage() {
           </div>
         </div>
       )}
+      <MilestonePopup milestone={milestone} onClose={() => { setMilestone(null); navigate('/') }} />
+
       <style>{`
         @keyframes spin { to { transform: rotate(360deg) } }
         @keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
