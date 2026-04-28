@@ -40,6 +40,21 @@ export default function Nav() {
         </svg>
       </button>}
 
+      {/* Bandeau prévention */}
+      <div style={{
+        background: 'var(--tx)',
+        color: 'var(--bg)',
+        fontSize: 10,
+        textAlign: 'center',
+        padding: '4px 14px',
+        lineHeight: 1.4,
+        letterSpacing: '.01em',
+        pointerEvents: 'none',
+        userSelect: 'none',
+      }}>
+        🚗 L'abus d'alcool est dangereux pour la santé · À consommer avec modération · Ne pas boire et conduire
+      </div>
+
       {/* Nav */}
       <nav style={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
