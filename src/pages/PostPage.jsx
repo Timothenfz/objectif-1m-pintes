@@ -24,6 +24,42 @@ function getGPS() {
   return requestGPSPermission()
 }
 
+function compressImage(file, maxSizeKB = 400) {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      // Redimensionner si trop grande
+      let w = img.width, h = img.height
+      const maxDim = 1200
+      if (w > maxDim || h > maxDim) {
+        if (w > h) { h = Math.round(h * maxDim / w); w = maxDim }
+        else { w = Math.round(w * maxDim / h); h = maxDim }
+      }
+      canvas.width = w; canvas.height = h
+      ctx.drawImage(img, 0, 0, w, h)
+      URL.revokeObjectURL(url)
+
+      // Compresser en JPEG
+      let quality = 0.8
+      const tryCompress = () => {
+        canvas.toBlob(blob => {
+          if (blob.size > maxSizeKB * 1024 && quality > 0.3) {
+            quality -= 0.1
+            tryCompress()
+          } else {
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }))
+          }
+        }, 'image/jpeg', quality)
+      }
+      tryCompress()
+    }
+    img.src = url
+  })
+}
+
 async function checkAndUnlockBadges(userId, newProfile, pinte) {
   // Récupérer les badges déjà débloqués
   const { data: existing } = await supabase
@@ -127,16 +163,20 @@ export default function PostPage() {
     setShowConfirm(false)
     setLoading(true); setError('')
 
-    setEtape('upload')
     let coords = null
-    if (gpsOn) coords = await getGPS()
+    if (gpsOn) {
+      coords = await getGPS()
+      console.log('GPS coords:', coords)
+    }
 
     const { data: numero, error: numError } = await supabase.rpc('next_numero_global')
     if (numError) { setError('Erreur serveur'); setLoading(false); setEtape(''); return }
 
-    const ext = photo.name.split('.').pop()
-    const path = `${user.id}/${Date.now()}.${ext}`
-    const { error: uploadError } = await supabase.storage.from('pintes').upload(path, photo)
+    // Compresser la photo avant upload
+    setEtape('upload')
+    const compressed = await compressImage(photo, 400)
+    const path = `${user.id}/${Date.now()}.jpg`
+    const { error: uploadError } = await supabase.storage.from('pintes').upload(path, compressed)
     if (uploadError) { setError(uploadError.message); setLoading(false); setEtape(''); return }
     const { data: { publicUrl } } = supabase.storage.from('pintes').getPublicUrl(path)
 

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { useLang } from '../hooks/useLang.jsx'
+import { useNavigate } from 'react-router-dom'
 import LangSwitcher from '../components/LangSwitcher.jsx'
 import ThemeSwitcher from '../components/ThemeSwitcher.jsx'
 import Avatar from '../components/Avatar.jsx'
@@ -17,6 +18,7 @@ const NOTIF_PREFS = [
 export default function ProfilePage() {
   const { profile, signOut, fetchProfile } = useAuth()
   const { t } = useLang()
+  const navigate = useNavigate()
   const [pintes, setPintes] = useState([])
   const [loading, setLoading] = useState(true)
   const [totalGlobal, setTotalGlobal] = useState(0)
@@ -242,7 +244,21 @@ export default function ProfilePage() {
         )}
       </div>
 
-      <div style={{ padding: '16px 12px 0' }}>
+      {profile?.is_admin && (
+        <div style={{ padding: '8px 12px 0' }}>
+          <button onClick={() => navigate('/admin')} style={{
+            width: '100%', padding: '12px 0',
+            background: 'rgba(245,166,35,0.1)',
+            border: '1px solid rgba(245,166,35,0.3)',
+            borderRadius: 10, color: 'var(--am)', fontSize: 13,
+            fontFamily: 'DM Sans,sans-serif', cursor: 'pointer',
+          }}>
+            ⚡ Panneau Admin
+          </button>
+        </div>
+      )}
+
+      <div style={{ padding: '8px 12px 0' }}>
         <button onClick={signOut} style={{ width: '100%', padding: '12px 0', background: 'transparent', border: '1px solid var(--border2)', borderRadius: 10, color: 'var(--tx2)', fontSize: 13, fontFamily: 'DM Sans,sans-serif', cursor: 'pointer' }}>
           {t('profile_logout')}
         </button>
