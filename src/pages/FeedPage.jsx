@@ -139,7 +139,19 @@ export default function FeedPage() {
             <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:34, color:'var(--tx)', lineHeight:.95 }}>DE PINTES</div>
           </div>
           <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8 }}>
-            <NotifBell />
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <button onClick={() => { fetchFeed(); fetchTotal() }} style={{
+                width:32, height:32, borderRadius:'50%',
+                background:'var(--bg3)', border:'1px solid var(--border)',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                cursor:'pointer', fontSize:15, color:'var(--tx2)',
+                transition:'transform .3s',
+              }}
+                onMouseDown={e => e.currentTarget.style.transform='rotate(180deg)'}
+                onMouseUp={e => setTimeout(()=>e.currentTarget.style.transform='rotate(0)',300)}
+              >↺</button>
+              <NotifBell />
+            </div>
             <div style={{ textAlign:'right' }}>
               <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:28, color:'var(--am)', lineHeight:1 }}>
                 {total.toLocaleString('fr-FR')}
