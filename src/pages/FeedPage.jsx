@@ -17,8 +17,10 @@ function timeAgo(dateStr) {
 
 function PinteCard({ pinte, index, isAdmin, onDelete }) {
   async function deletePinte() {
-    if (!window.confirm('Supprimer cette pinte ?')) return
+    if (!window.confirm('Supprimer cette pinte ? Les numéros seront recalculés.')) return
     await supabase.from('pintes').delete().eq('id', pinte.id)
+    // Renuméroter toutes les pintes
+    await supabase.rpc('renumeroter_pintes')
     onDelete(pinte.id)
   }
 
@@ -116,7 +118,8 @@ export default function FeedPage() {
   }
 
   async function fetchTotal() {
-    const { count } = await supabase.from('pintes').select('*', { count:'exact', head:true })
+    const { count } = await supabase.from('pintes')
+      .select('*', { count: 'exact', head: true })
     setTotal(count || 0)
   }
 
