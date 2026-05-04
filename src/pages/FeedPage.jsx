@@ -8,7 +8,7 @@ import NotifBell from '../components/NotifBell.jsx'
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime()
   const m = Math.floor(diff / 60000)
-  if (m < 1) return 'à l\'instant'
+  if (m < 1) return "à l'instant"
   if (m < 60) return `il y a ${m}min`
   const h = Math.floor(m / 60)
   if (h < 24) return `il y a ${h}h`
@@ -18,7 +18,6 @@ function timeAgo(dateStr) {
 function PinteCard({ pinte, index, isAdmin, onDelete }) {
   async function deletePinte() {
     if (!window.confirm('Supprimer cette pinte ?')) return
-    const { supabase } = await import('../lib/supabase.js')
     await supabase.from('pintes').delete().eq('id', pinte.id)
     onDelete(pinte.id)
   }
@@ -32,41 +31,51 @@ function PinteCard({ pinte, index, isAdmin, onDelete }) {
     }}>
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px' }}>
-        <Avatar
-          username={pinte.profiles?.username}
-          avatarUrl={pinte.profiles?.avatar_url}
-          size={38}
-          border
-        />
+        <Avatar username={pinte.profiles?.username} avatarUrl={pinte.profiles?.avatar_url} size={38} border />
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ fontSize:14, fontWeight:500, color:'var(--tx)' }}>{pinte.profiles?.username || 'Anonyme'}</div>
           <div style={{ fontSize:11, color:'var(--tx2)', marginTop:1 }}>
             {pinte.lieu || 'Lieu inconnu'} · {timeAgo(pinte.created_at)}
           </div>
         </div>
-        <div style={{
-          background:'var(--am)', color:'#0a0a0a',
-          fontFamily:'Bebas Neue,sans-serif', fontSize:17,
-          padding:'4px 10px', borderRadius:20, letterSpacing:'.05em',
-        }}>
-          #{pinte.numero_global}
+        {/* Badge numéro + bouton suppression admin */}
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <div style={{
+            background:'var(--am)', color:'#0a0a0a',
+            fontFamily:'Bebas Neue,sans-serif', fontSize:17,
+            padding:'4px 10px', borderRadius:20, letterSpacing:'.05em',
+          }}>
+            #{pinte.numero_global}
+          </div>
+          {isAdmin && (
+            <button onClick={deletePinte} style={{
+              width:30, height:30, borderRadius:'50%',
+              background:'rgba(239,68,68,0.15)',
+              border:'1px solid rgba(239,68,68,0.3)',
+              color:'#f87171', cursor:'pointer',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              fontSize:15, flexShrink:0,
+            }}>🗑</button>
+          )}
         </div>
       </div>
 
       {/* Photo */}
       <div style={{ aspectRatio:'4/3', background:'var(--bg3)', overflow:'hidden' }}>
-        <img src={pinte.photo_url} alt={`Pinte #${pinte.numero_global}`}
-          style={{ width:'100%', height:'100%', objectFit:'cover' }} loading="lazy" />
+        {pinte.photo_url ? (
+          <img src={pinte.photo_url} alt={`Pinte #${pinte.numero_global}`}
+            style={{ width:'100%', height:'100%', objectFit:'cover' }} loading="lazy" />
+        ) : (
+          <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:48 }}>🍺</div>
+        )}
       </div>
 
-      {/* Type boisson */}
       {pinte.type_boisson && (
         <div style={{ padding:'6px 14px 0', fontSize:11, color:'var(--tx2)', fontStyle:'italic' }}>
           {pinte.type_boisson}
         </div>
       )}
 
-      {/* Reactions + commentaires */}
       <Reactions pinteId={pinte.id} />
     </div>
   )
@@ -84,16 +93,11 @@ export default function FeedPage() {
     const channel = supabase.channel('pintes-feed')
       .on('postgres_changes', { event:'INSERT', schema:'public', table:'pintes' }, () => { fetchFeed(); fetchTotal() })
       .subscribe()
-
-    // Rechargement auto toutes les 10s en backup
     const interval = setInterval(() => { fetchFeed(); fetchTotal() }, 10000)
-
-    // Recharger quand l'app revient au premier plan
     function handleVisibility() {
       if (document.visibilityState === 'visible') { fetchFeed(); fetchTotal() }
     }
     document.addEventListener('visibilitychange', handleVisibility)
-
     return () => {
       supabase.removeChannel(channel)
       clearInterval(interval)
@@ -120,23 +124,25 @@ export default function FeedPage() {
 
   return (
     <div style={{ minHeight:'100dvh', paddingBottom:90, background:'var(--bg)' }}>
-      {/* Header */}
       <div style={{
         padding:'52px 16px 16px',
         background:'linear-gradient(180deg,rgba(245,166,35,0.08) 0%,transparent 100%)',
-        borderBottom:'1px solid rgba(255,255,255,0.07)',
+        borderBottom:'1px solid var(--border)',
       }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
           <div>
             <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:13, color:'var(--am)', letterSpacing:'.08em' }}>OBJECTIF</div>
-            <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:34, color:'var(--foam)', lineHeight:.95 }}>1 MILLION</div>
-            <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:34, color:'var(--foam)', lineHeight:.95 }}>DE PINTES</div>
+            <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:34, color:'var(--tx)', lineHeight:.95 }}>1 MILLION</div>
+            <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:34, color:'var(--tx)', lineHeight:.95 }}>DE PINTES</div>
           </div>
-          <div style={{ textAlign:'right' }}>
-            <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:28, color:'var(--am)', lineHeight:1 }}>
-              {total.toLocaleString('fr-FR')}
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8 }}>
+            <NotifBell />
+            <div style={{ textAlign:'right' }}>
+              <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:28, color:'var(--am)', lineHeight:1 }}>
+                {total.toLocaleString('fr-FR')}
+              </div>
+              <div style={{ fontSize:10, color:'var(--tx2)' }}>/ 1 000 000</div>
             </div>
-            <div style={{ fontSize:10, color:'var(--tx2)' }}>/ 1 000 000</div>
           </div>
         </div>
         <div style={{ margin:'12px 0 4px', background:'var(--bg3)', borderRadius:4, height:5, overflow:'hidden' }}>
@@ -147,15 +153,10 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* Feed */}
       <div style={{ padding:'14px 14px 0', display:'flex', flexDirection:'column', gap:14 }}>
         {loading ? (
           [0,1,2].map(i => (
-            <div key={i} style={{
-              height:320, borderRadius:20,
-              background:'linear-gradient(90deg,#181818 25%,#222 50%,#181818 75%)',
-              backgroundSize:'200% 100%', animation:'shimmer 1.5s infinite',
-            }} />
+            <div key={i} style={{ height:320, borderRadius:20, background:'linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%)', backgroundSize:'200% 100%', animation:'shimmer 1.5s infinite' }} />
           ))
         ) : pintes.length === 0 ? (
           <div style={{ textAlign:'center', padding:'60px 0', color:'var(--tx2)' }}>
@@ -163,7 +164,13 @@ export default function FeedPage() {
             <p style={{ fontSize:14 }}>Pas encore de pinte. Sois le premier !</p>
           </div>
         ) : (
-          pintes.map((p, i) => <PinteCard key={p.id} pinte={p} index={i} isAdmin={isAdmin} onDelete={pid => setPintes(prev => prev.filter(x => x.id !== pid))} />)
+          pintes.map((p, i) => (
+            <PinteCard
+              key={p.id} pinte={p} index={i}
+              isAdmin={isAdmin}
+              onDelete={pid => setPintes(prev => prev.filter(x => x.id !== pid))}
+            />
+          ))
         )}
       </div>
 
