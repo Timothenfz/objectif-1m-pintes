@@ -7,14 +7,6 @@ import LangSwitcher from '../components/LangSwitcher.jsx'
 import ThemeSwitcher from '../components/ThemeSwitcher.jsx'
 import Avatar from '../components/Avatar.jsx'
 
-const NOTIF_PREFS = [
-  { id: 'notif_nouvelle_pinte', label: 'Nouvelle pinte dans le groupe', icon: '🍺' },
-  { id: 'notif_reaction', label: 'Réaction sur ma pinte', icon: '😄' },
-  { id: 'notif_commentaire', label: 'Commentaire sur ma pinte', icon: '💬' },
-  { id: 'notif_recap_jour', label: 'Récap journalier (20h)', icon: '📅' },
-  { id: 'notif_recap_semaine', label: 'Récap hebdo (lundi)', icon: '📊' },
-]
-
 export default function ProfilePage() {
   const { profile, signOut, fetchProfile } = useAuth()
   const { t } = useLang()
@@ -30,19 +22,12 @@ export default function ProfilePage() {
   const [pseudoSaved, setPseudoSaved] = useState(false)
   const [pseudoError, setPseudoError] = useState('')
   const [avatarLoading, setAvatarLoading] = useState(false)
-  const [notifPrefs, setNotifPrefs] = useState({
-    notif_nouvelle_pinte: true,
-    notif_reaction: true,
-    notif_commentaire: true,
-    notif_recap_jour: false,
-    notif_recap_semaine: false,
-  })
+
   const avatarRef = useRef()
 
   useEffect(() => {
     if (profile?.id) {
       fetchMyPintes()
-      loadNotifPrefs()
     }
     fetchTotal()
   }, [profile])
@@ -57,17 +42,6 @@ export default function ProfilePage() {
   async function fetchTotal() {
     const { count } = await supabase.from('pintes').select('*', { count: 'exact', head: true })
     setTotalGlobal(count || 0)
-  }
-
-  async function loadNotifPrefs() {
-    const stored = localStorage.getItem(`notif_prefs_${profile.id}`)
-    if (stored) setNotifPrefs(JSON.parse(stored))
-  }
-
-  async function saveNotifPref(key, value) {
-    const newPrefs = { ...notifPrefs, [key]: value }
-    setNotifPrefs(newPrefs)
-    localStorage.setItem(`notif_prefs_${profile.id}`, JSON.stringify(newPrefs))
   }
 
   async function saveVille() {
@@ -204,34 +178,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Préférences notifications */}
-      <div style={{ padding: '4px 12px 14px' }}>
-        <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 8, fontWeight: 500 }}>🔔 Notifications</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {NOTIF_PREFS.map(pref => (
-            <div key={pref.id} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '10px 13px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 10,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 16 }}>{pref.icon}</span>
-                <span style={{ fontSize: 13, color: 'var(--tx)' }}>{pref.label}</span>
-              </div>
-              <div onClick={() => saveNotifPref(pref.id, !notifPrefs[pref.id])} style={{
-                width: 40, height: 24, borderRadius: 12,
-                background: notifPrefs[pref.id] ? 'var(--am)' : 'var(--bg3)',
-                position: 'relative', cursor: 'pointer', transition: 'background .2s', flexShrink: 0,
-              }}>
-                <div style={{
-                  width: 18, height: 18, borderRadius: '50%', background: 'white',
-                  position: 'absolute', top: 3, left: notifPrefs[pref.id] ? 19 : 3,
-                  transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+
 
       {/* Langue + Thème */}
       <div style={{ padding: '0 12px 14px' }}>
