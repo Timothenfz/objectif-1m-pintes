@@ -12,6 +12,7 @@ import BadgesPage from './pages/BadgesPage.jsx'
 import ChatPage from './pages/ChatPage.jsx'
 import DefiPage from './pages/DefiPage.jsx'
 import AdminPage from './pages/AdminPage.jsx'
+import InstallPage from './pages/InstallPage.jsx'
 import Nav from './components/Nav.jsx'
 
 function ProtectedRoute({ children }) {
@@ -44,6 +45,7 @@ function AppContent() {
         <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
         <Route path="/defis" element={<ProtectedRoute><DefiPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+        <Route path="/installer" element={<ProtectedRoute><InstallPage /></ProtectedRoute>} />
         <Route path="/profil" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       </Routes>
       {user && <Nav />}
