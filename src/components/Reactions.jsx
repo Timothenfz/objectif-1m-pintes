@@ -239,6 +239,16 @@ export default function Reactions({ pinteId, style }) {
     }
   }
 
+  async function sendNotif(type, titre, message) {
+    // Trouver le proprio de la pinte
+    const { data: pinteData } = await supabase
+      .from('pintes').select('user_id').eq('id', pinteId).single()
+    if (!pinteData || pinteData.user_id === user.id) return
+    await supabase.from('notifications').insert({
+      user_id: pinteData.user_id, type, titre, message, lien: '/',
+    })
+  }
+
   async function toggleReaction(emoji) {
     if (!user) return
     setShowPicker(false)
@@ -249,6 +259,7 @@ export default function Reactions({ pinteId, style }) {
     } else {
       await supabase.from('reactions').insert({ pinte_id: pinteId, user_id: user.id, emoji })
       setMyReactions(s => new Set([...s, emoji]))
+      sendNotif('reaction', 'Nouvelle réaction !', `${emoji} sur ta pinte`)
       setReactions(rs => {
         const ex = rs.find(r => r.emoji===emoji)
         if (ex) return rs.map(r => r.emoji===emoji ? {...r, nb: r.nb+1} : r)

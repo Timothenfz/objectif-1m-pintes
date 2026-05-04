@@ -5,15 +5,23 @@ import { useAuth } from '../hooks/useAuth.jsx'
 import MilestonePopup, { checkMilestone } from '../components/MilestonePopup.jsx'
 import { BADGES } from '../lib/badges.js'
 
-function getGPS() {
+async function requestGPSPermission() {
+  if (!navigator.geolocation) return null
+  try {
+    const perm = await navigator.permissions.query({ name: 'geolocation' })
+    if (perm.state === 'denied') return null
+  } catch(e) {}
   return new Promise((resolve) => {
-    if (!navigator.geolocation) { resolve(null); return }
     navigator.geolocation.getCurrentPosition(
       pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       () => resolve(null),
-      { timeout: 5000 }
+      { timeout: 8000, enableHighAccuracy: true }
     )
   })
+}
+
+function getGPS() {
+  return requestGPSPermission()
 }
 
 async function checkAndUnlockBadges(userId, newProfile, pinte) {
@@ -57,6 +65,30 @@ async function checkAndUnlockBadges(userId, newProfile, pinte) {
     await supabase.from('badges_utilisateur').insert(
       toUnlock.map(b => ({ user_id: userId, badge_id: b.id }))
     )
+  }
+}
+
+async function sendNotifNouvellesPintes(userId, username, numeroGlobal, supabaseClient) {
+  // Récupérer tous les users qui veulent des notifs de nouvelles pintes (sauf le posteur)
+  const { data: profiles } = await supabaseClient
+    .from('profiles')
+    .select('id')
+    .neq('id', userId)
+
+  if (!profiles?.length) return
+
+  // Insérer une notif pour chaque membre
+  const notifs = profiles.map(p => ({
+    user_id: p.id,
+    type: 'nouvelle_pinte',
+    titre: `${username} vient de poster !`,
+    message: `Nouvelle pinte #${numeroGlobal} dans le groupe 🍺`,
+    lien: '/',
+  }))
+
+  // Insérer par batch de 50
+  for (let i = 0; i < notifs.length; i += 50) {
+    await supabaseClient.from('notifications').insert(notifs.slice(i, i + 50))
   }
 }
 
@@ -123,6 +155,9 @@ export default function PostPage() {
     const newCount = prevCount + 1
     const hit = checkMilestone(prevCount, newCount)
     if (hit) setMilestone(hit)
+
+    // Envoyer notifs nouvelle pinte (fire and forget)
+    sendNotifNouvellesPintes(user.id, profile?.username || 'Quelqu\'un', numero, supabase)
 
     // Vérifier et débloquer les badges
     const updatedProfile = { ...profile, total_perso: newCount }
