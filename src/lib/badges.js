@@ -40,6 +40,7 @@ export const BADGES = [
   { id: 'social_king',   cat: 'Rare',      rarity: 'Rare',        icon: '💬', name_fr: 'Roi du Chat',        name_en: 'Chat King',         desc_fr: '50 messages dans le chat',    desc_en: '50 chat messages',          check: (s) => s.chatMessages >= 50 },
   { id: 'reactor',       cat: 'Fun',       rarity: 'Commun',      icon: '😂', name_fr: 'Réacteur',           name_en: 'Reactor',           desc_fr: '30 réactions postées',        desc_en: '30 reactions posted',       check: (s) => s.reactions >= 30 },
   { id: 'commentator',   cat: 'Fun',       rarity: 'Peu commun',  icon: '🗣', name_fr: 'Commentateur',       name_en: 'Commentator',       desc_fr: '20 commentaires postés',      desc_en: '20 comments posted',        check: (s) => s.commentaires >= 20 },
+  { id: 'globe_brassicole', cat: 'Rare',    rarity: 'Légendaire',  icon: '🌍', name_fr: 'Globe Trotter Brassicole', name_en: 'Beer Globe Trotter', desc_fr: 'Poster une pinte sur 5 continents', desc_en: 'Post a pint on 5 continents', check: (s) => s.continents >= 5 },
 ]
 
 export const CATEGORIES = ['Tous', 'Classique', 'Streak', 'Heure', 'Lieux', 'Soirée', 'Fun', 'Rare']
@@ -49,4 +50,5 @@ export const RARITY_COLORS = {
   'Peu commun': { bg: 'rgba(100,200,100,0.08)', border: 'rgba(100,200,100,0.2)', text: '#4ade80' },
   'Rare':       { bg: 'rgba(100,150,255,0.08)', border: 'rgba(100,150,255,0.2)', text: '#818cf8' },
   'Épique':     { bg: 'rgba(245,166,35,0.08)',  border: 'rgba(245,166,35,0.25)', text: '#f5a623' },
+  'Légendaire': { bg: 'rgba(255,215,0,0.12)',    border: 'rgba(255,215,0,0.4)',    text: '#FFD700' },
 }

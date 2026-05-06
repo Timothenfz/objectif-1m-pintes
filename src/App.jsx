@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
 import { LangProvider } from './hooks/useLang.jsx'
 import { ThemeProvider } from './hooks/useTheme.jsx'
+import { useState, useEffect } from 'react'
 import AuthPage from './pages/AuthPage.jsx'
 import FeedPage from './pages/FeedPage.jsx'
 import RankingPage from './pages/RankingPage.jsx'
@@ -13,7 +14,10 @@ import ChatPage from './pages/ChatPage.jsx'
 import DefiPage from './pages/DefiPage.jsx'
 import AdminPage from './pages/AdminPage.jsx'
 import InstallPage from './pages/InstallPage.jsx'
+import CGUPage from './pages/CGUPage.jsx'
+import StatsPage from './pages/StatsPage.jsx'
 import Nav from './components/Nav.jsx'
+import CGUPopup from './components/CGUPopup.jsx'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -33,8 +37,22 @@ function Loader() {
 
 function AppContent() {
   const { user } = useAuth()
+  const [showCGU, setShowCGU] = useState(false)
+
+  useEffect(() => {
+    if (user && !localStorage.getItem('cgu_accepted')) {
+      setShowCGU(true)
+    }
+  }, [user])
+
+  function acceptCGU() {
+    localStorage.setItem('cgu_accepted', '1')
+    setShowCGU(false)
+  }
+
   return (
     <>
+      {showCGU && <CGUPopup onAccept={acceptCGU} />}
       <Routes>
         <Route path="/auth" element={user ? <Navigate to="/" replace /> : <AuthPage />} />
         <Route path="/" element={<ProtectedRoute><FeedPage /></ProtectedRoute>} />
@@ -44,11 +62,13 @@ function AppContent() {
         <Route path="/badges" element={<ProtectedRoute><BadgesPage /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
         <Route path="/defis" element={<ProtectedRoute><DefiPage /></ProtectedRoute>} />
+        <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
         <Route path="/installer" element={<ProtectedRoute><InstallPage /></ProtectedRoute>} />
+        <Route path="/cgu" element={<ProtectedRoute><CGUPage /></ProtectedRoute>} />
         <Route path="/profil" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       </Routes>
-      {user && <Nav />}
+      {user && !showCGU && <Nav />}
     </>
   )
 }

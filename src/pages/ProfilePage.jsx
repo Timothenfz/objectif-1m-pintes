@@ -194,6 +194,26 @@ export default function ProfilePage() {
 
       {/* Bouton installer l'app */}
       <div style={{ padding: '4px 12px 8px' }}>
+        <button onClick={() => navigate('/stats')} style={{
+          width: '100%', padding: '12px 0',
+          background: 'var(--bg3)', border: '1px solid var(--border)',
+          borderRadius: 10, color: 'var(--tx)', fontSize: 13,
+          fontFamily: 'DM Sans,sans-serif', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          marginBottom: 8,
+        }}>
+          📊 Stats & Fun facts
+        </button>
+        <button onClick={() => navigate('/cgu')} style={{
+          width: '100%', padding: '12px 0',
+          background: 'var(--bg3)', border: '1px solid var(--border)',
+          borderRadius: 10, color: 'var(--tx2)', fontSize: 13,
+          fontFamily: 'DM Sans,sans-serif', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          marginBottom: 8,
+        }}>
+          ⚖️ Mentions légales & Éthique
+        </button>
         <button onClick={() => navigate('/installer')} style={{
           width: '100%', padding: '12px 0',
           background: 'var(--bg3)', border: '1px solid var(--border)',
