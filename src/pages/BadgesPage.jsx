@@ -92,9 +92,9 @@ export default function BadgesPage() {
               {unlocked && (
                 <div style={{
                   position: 'absolute', top: 10, left: 10,
-                  width: 8, height: 8, borderRadius: '50%',
-                  background: colors.text,
-                  boxShadow: `0 0 6px ${colors.text}`,
+                  width: 10, height: 10, borderRadius: '50%',
+                  background: '#22c55e',
+                  boxShadow: '0 0 8px rgba(34,197,94,0.7)',
                 }} />
               )}
             </div>
