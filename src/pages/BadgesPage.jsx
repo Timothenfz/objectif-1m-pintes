@@ -83,7 +83,7 @@ export default function BadgesPage() {
               <div style={{ fontSize: 36, marginBottom: 8, filter: unlocked ? 'none' : 'grayscale(1)', textAlign: 'center' }}>
                 {badge.icon}
               </div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: unlocked ? '#ede9e0' : '#4a4742', textAlign: 'center', marginBottom: 4 }}>
+              <div style={{ fontSize: 13, fontWeight: 500, color: unlocked ? 'var(--tx)' : 'var(--tx2)', textAlign: 'center', marginBottom: 4 }}>
                 {badge.name_fr}
               </div>
               <div style={{ fontSize: 11, color: 'var(--tx2)', textAlign: 'center', lineHeight: 1.4 }}>

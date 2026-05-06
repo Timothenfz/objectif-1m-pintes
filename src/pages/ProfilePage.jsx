@@ -115,19 +115,7 @@ export default function ProfilePage() {
           <input ref={avatarRef} type="file" accept="image/*" onChange={handleAvatar} style={{ display: 'none' }} />
         </div>
         <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 26, letterSpacing: '.05em', color: 'var(--tx)' }}>{profile?.username}</div>
-        {/* Bouton installer l'app */}
-      <div style={{ padding: '4px 12px 8px' }}>
-        <button onClick={() => navigate('/installer')} style={{
-          width: '100%', padding: '12px 0',
-          background: 'var(--bg3)', border: '1px solid var(--border)',
-          borderRadius: 10, color: 'var(--tx)', fontSize: 13,
-          fontFamily: 'DM Sans,sans-serif', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        }}>
-          📲 Installer l'app sur mon téléphone
-        </button>
-      </div>
-
+  
       {profile?.is_admin && (
           <div style={{ display: 'inline-block', marginTop: 4, padding: '2px 10px', background: 'rgba(245,166,35,0.15)', border: '1px solid rgba(245,166,35,0.3)', borderRadius: 20, fontSize: 11, color: 'var(--am)', fontWeight: 500 }}>
             ⚡ Admin
