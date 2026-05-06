@@ -11,7 +11,6 @@ import ProfilePage from './pages/ProfilePage.jsx'
 import CartePage from './pages/CartePage.jsx'
 import BadgesPage from './pages/BadgesPage.jsx'
 import ChatPage from './pages/ChatPage.jsx'
-import DefiPage from './pages/DefiPage.jsx'
 import AdminPage from './pages/AdminPage.jsx'
 import InstallPage from './pages/InstallPage.jsx'
 import CGUPage from './pages/CGUPage.jsx'
@@ -61,7 +60,6 @@ function AppContent() {
         <Route path="/carte" element={<ProtectedRoute><CartePage /></ProtectedRoute>} />
         <Route path="/badges" element={<ProtectedRoute><BadgesPage /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-        <Route path="/defis" element={<ProtectedRoute><DefiPage /></ProtectedRoute>} />
         <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
         <Route path="/installer" element={<ProtectedRoute><InstallPage /></ProtectedRoute>} />

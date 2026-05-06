@@ -54,7 +54,7 @@ export default function StatsPage() {
       piscines: (litres / 2500000).toFixed(6),
       baignoires: Math.round(litres / 200),
       camions: (litres / 30000).toFixed(3),
-      euros: Math.round(total * 6),
+      euros: Math.round(total * 8),
       jours,
       topUser: topUser?.[0],
       pctObjectif: ((total / 1000000) * 100).toFixed(3),
@@ -111,7 +111,7 @@ export default function StatsPage() {
 
         {/* Section argent */}
         <div style={{ fontSize: 12, color: 'var(--tx2)', fontWeight: 500, marginTop: 6, paddingLeft: 2 }}>💰 EN EUROS</div>
-        <StatCard emoji="💸" title="Dépensé estimé" value={`${stats.euros.toLocaleString('fr-FR')} €`} sub="à 6€ la pinte en moyenne" color="#4ade80" />
+        <StatCard emoji="💸" title="Dépensé estimé" value={`${stats.euros.toLocaleString('fr-FR')} €`} sub="à 8€ la pinte en moyenne" color="#4ade80" />
 
         {/* Section WTF */}
         <div style={{ fontSize: 12, color: 'var(--tx2)', fontWeight: 500, marginTop: 6, paddingLeft: 2 }}>🤯 POUR RIGOLER</div>

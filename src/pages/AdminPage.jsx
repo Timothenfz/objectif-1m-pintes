@@ -24,6 +24,27 @@ export default function AdminPage() {
     setStats({ total, withPhoto, oldest1000: storage?.length || 0 })
   }
 
+  async function purgerChat(keepLast) {
+    const msg = keepLast === 0 
+      ? 'Vider entièrement le chat ?' 
+      : `Garder seulement les ${keepLast} derniers messages ?`
+    if (!window.confirm(msg)) return
+    setLoading(true); setMsg('')
+
+    if (keepLast === 0) {
+      await supabase.from('messages_chat').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    } else {
+      const { data: recent } = await supabase
+        .from('messages_chat').select('id').order('created_at', { ascending: false }).limit(keepLast)
+      const keepIds = (recent || []).map(m => m.id)
+      if (keepIds.length > 0) {
+        await supabase.from('messages_chat').delete().not('id', 'in', `(${keepIds.map(id => `"${id}"`).join(',')})`)
+      }
+    }
+    setMsg('✓ Chat purgé avec succès.')
+    setLoading(false)
+  }
+
   async function purgerPhotos(mode) {
     if (!window.confirm(`Supprimer les photos des ${mode === 'oldest' ? '1000 premières' : 'pintes de plus de 6 mois'} ? Les pintes restent dans le classement.`)) return
     setLoading(true); setMsg('')
@@ -126,15 +147,52 @@ export default function AdminPage() {
         <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px' }}>
           <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 18, color: 'var(--tx)', marginBottom: 6 }}>MODÉRATION</div>
           <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 10 }}>
-            Le bouton 🗑 est visible sur chaque pinte du feed quand tu es connecté en tant qu'admin.
+            Le bouton 🗑 est visible sur chaque pinte du feed et chaque message du chat quand tu es admin.
           </div>
-          <button onClick={() => navigate('/')} style={{
-            padding: '12px', background: 'var(--bg3)', border: '1px solid var(--border)',
-            borderRadius: 10, color: 'var(--tx)', fontSize: 13,
-            fontFamily: 'DM Sans,sans-serif', cursor: 'pointer', width: '100%',
-          }}>
-            Aller au Feed →
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => navigate('/')} style={{
+              flex: 1, padding: '12px', background: 'var(--bg3)', border: '1px solid var(--border)',
+              borderRadius: 10, color: 'var(--tx)', fontSize: 13,
+              fontFamily: 'DM Sans,sans-serif', cursor: 'pointer',
+            }}>
+              Feed →
+            </button>
+            <button onClick={() => navigate('/chat')} style={{
+              flex: 1, padding: '12px', background: 'var(--bg3)', border: '1px solid var(--border)',
+              borderRadius: 10, color: 'var(--tx)', fontSize: 13,
+              fontFamily: 'DM Sans,sans-serif', cursor: 'pointer',
+            }}>
+              Chat →
+            </button>
+          </div>
+        </div>
+
+        {/* Purge chat */}
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px' }}>
+          <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 18, color: 'var(--tx)', marginBottom: 6 }}>PURGER LE CHAT</div>
+          <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 14, lineHeight: 1.5 }}>
+            Supprime les anciens messages pour alléger le chat. Les photos uploadées dans le chat sont aussi supprimées.
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button onClick={() => purgerChat(100)} disabled={loading} style={{
+              padding: '13px', background: 'rgba(245,166,35,0.1)',
+              border: '1px solid rgba(245,166,35,0.3)', borderRadius: 10,
+              color: 'var(--am)', fontSize: 13, fontFamily: 'DM Sans,sans-serif',
+              cursor: 'pointer', textAlign: 'left',
+            }}>
+              <div style={{ fontWeight: 500 }}>🗑 Garder les 100 derniers messages</div>
+              <div style={{ fontSize: 11, opacity: 0.7, marginTop: 3 }}>Supprime tous les messages plus anciens</div>
+            </button>
+            <button onClick={() => purgerChat(0)} disabled={loading} style={{
+              padding: '13px', background: 'rgba(239,68,68,0.08)',
+              border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10,
+              color: '#f87171', fontSize: 13, fontFamily: 'DM Sans,sans-serif',
+              cursor: 'pointer', textAlign: 'left',
+            }}>
+              <div style={{ fontWeight: 500 }}>🗑 Vider entièrement le chat</div>
+              <div style={{ fontSize: 11, opacity: 0.7, marginTop: 3 }}>Supprime tous les messages sans exception</div>
+            </button>
+          </div>
         </div>
       </div>
     </div>
