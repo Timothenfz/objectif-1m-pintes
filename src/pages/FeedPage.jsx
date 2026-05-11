@@ -142,7 +142,6 @@ export default function FeedPage() {
           </div>
           <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <ProfileAvatar />
               <button onClick={() => { fetchFeed(); fetchTotal() }} style={{
                 width:32, height:32, borderRadius:'50%',
                 background:'var(--bg3)', border:'1px solid var(--border)',
@@ -154,6 +153,7 @@ export default function FeedPage() {
                 onMouseUp={e => setTimeout(()=>e.currentTarget.style.transform='rotate(0)',300)}
               >↺</button>
               <NotifBell />
+              <ProfileAvatar />
             </div>
             <div style={{ textAlign:'right' }}>
               <div style={{ fontFamily:'Bebas Neue,sans-serif', fontSize:28, color:'var(--am)', lineHeight:1 }}>
