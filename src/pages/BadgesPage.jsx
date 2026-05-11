@@ -31,11 +31,13 @@ export default function BadgesPage() {
       <div style={{ padding: '52px 16px 16px', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent:'space-between', marginBottom: 12 }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <div style={{ fontSize: 32 }}>🏅</div>
-          <div>
-            <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 32, color: 'var(--tx)', lineHeight: 1 }}>BADGES</div>
-            <div style={{ fontSize: 11, color: 'var(--tx2)', marginTop: 2 }}>{unlocked} / {BADGES.length} débloqués</div>
+            <div style={{ fontSize: 32 }}>🏅</div>
+            <div>
+              <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 32, color: 'var(--tx)', lineHeight: 1 }}>BADGES</div>
+              <div style={{ fontSize: 11, color: 'var(--tx2)', marginTop: 2 }}>{unlocked} / {BADGES.length} débloqués</div>
+            </div>
           </div>
+          <ProfileAvatar />
         </div>
 
         {/* Progress */}
