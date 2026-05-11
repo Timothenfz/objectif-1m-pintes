@@ -81,6 +81,8 @@ function Row({ profile, rank, isMe, value, period }) {
   )
 }
 
+import ProfileAvatar from '../components/ProfileAvatar.jsx'
+
 export default function RankingPage() {
   const [period, setPeriod] = useState('alltime')
   const [profiles, setProfiles] = useState([])
@@ -140,7 +142,10 @@ export default function RankingPage() {
     <div style={{ minHeight: '100dvh', paddingBottom: 90, background: 'var(--bg)' }}>
       {/* Header */}
       <div style={{ padding: '52px 16px 14px' }}>
-        <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 32, color: 'var(--tx)' }}>CLASSEMENT</div>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+          <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 32, color: 'var(--tx)' }}>CLASSEMENT</div>
+          <ProfileAvatar />
+        </div>
         <div style={{ fontSize: 11, color: 'var(--tx2)', marginTop: 2 }}>
           {profiles.length} membre{profiles.length > 1 ? 's' : ''} · {totalPintes.toLocaleString('fr-FR')} pintes
           {myRank >= 0 && ` · tu es #${myRank + 1}`}

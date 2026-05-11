@@ -15,6 +15,8 @@ function timeAgo(dateStr) {
 
 const NAV_H = 76
 
+import ProfileAvatar from '../components/ProfileAvatar.jsx'
+
 export default function ChatPage() {
   const { user, profile } = useAuth()
   const isAdmin = profile?.is_admin === true
@@ -141,10 +143,11 @@ export default function ChatPage() {
       <div style={{ padding: '52px 16px 12px', borderBottom: '1px solid var(--border)', background: 'var(--bg)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ fontSize: 24 }}>💬</div>
-          <div>
+          <div style={{ flex:1 }}>
             <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 26, color: 'var(--tx)', lineHeight: 1 }}>CHAT</div>
             <div style={{ fontSize: 11, color: 'var(--tx2)' }}>Chat communautaire</div>
           </div>
+          <ProfileAvatar />
         </div>
       </div>
 

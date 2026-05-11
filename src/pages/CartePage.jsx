@@ -16,6 +16,8 @@ function getFlag(ville) {
   return '📍'
 }
 
+import ProfileAvatar from '../components/ProfileAvatar.jsx'
+
 export default function CartePage() {
   const [tab, setTab] = useState('carte')
   const [pintes, setPintes] = useState([])
@@ -151,6 +153,7 @@ export default function CartePage() {
               </div>
             </div>
           </div>
+          <ProfileAvatar />
           {tab==='carte' && (
             <button onClick={() => { mapInstanceRef.current=null; initializedRef.current=false; fetchData() }} style={{
               background:'var(--bg3)', border:'1px solid var(--border)',

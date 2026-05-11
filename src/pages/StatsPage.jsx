@@ -20,6 +20,8 @@ function StatCard({ emoji, title, value, sub, color }) {
   )
 }
 
+import ProfileAvatar from '../components/ProfileAvatar.jsx'
+
 export default function StatsPage() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -74,7 +76,10 @@ export default function StatsPage() {
   return (
     <div style={{ minHeight: '100dvh', paddingBottom: 100, background: 'var(--bg)' }}>
       <div style={{ padding: '52px 16px 16px', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 32, color: 'var(--tx)' }}>STATS</div>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 32, color: 'var(--tx)' }}>STATS</div>
+          <ProfileAvatar />
+        </div>
         <div style={{ fontSize: 12, color: 'var(--tx2)', marginTop: 2 }}>Fun facts & chiffres du groupe</div>
       </div>
 

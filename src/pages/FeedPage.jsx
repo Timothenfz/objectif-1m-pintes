@@ -83,6 +83,8 @@ function PinteCard({ pinte, index, isAdmin, onDelete }) {
   )
 }
 
+import ProfileAvatar from '../components/ProfileAvatar.jsx'
+
 export default function FeedPage() {
   const [pintes, setPintes] = useState([])
   const [loading, setLoading] = useState(true)
@@ -140,6 +142,7 @@ export default function FeedPage() {
           </div>
           <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <ProfileAvatar />
               <button onClick={() => { fetchFeed(); fetchTotal() }} style={{
                 width:32, height:32, borderRadius:'50%',
                 background:'var(--bg3)', border:'1px solid var(--border)',

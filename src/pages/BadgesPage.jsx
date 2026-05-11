@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { BADGES, CATEGORIES, RARITY_COLORS } from '../lib/badges.js'
 
+import ProfileAvatar from '../components/ProfileAvatar.jsx'
+
 export default function BadgesPage() {
   const { profile } = useAuth()
   const [unlockedIds, setUnlockedIds] = useState(new Set())
@@ -27,7 +29,8 @@ export default function BadgesPage() {
     <div style={{ minHeight: '100dvh', paddingBottom: 90, background: 'var(--bg)' }}>
       {/* Header */}
       <div style={{ padding: '52px 16px 16px', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent:'space-between', marginBottom: 12 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <div style={{ fontSize: 32 }}>🏅</div>
           <div>
             <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 32, color: 'var(--tx)', lineHeight: 1 }}>BADGES</div>
