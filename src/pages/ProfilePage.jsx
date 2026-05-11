@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { useLang } from '../hooks/useLang.jsx'
 import { useNavigate } from 'react-router-dom'
+import emailjs from '@emailjs/browser'
 import LangSwitcher from '../components/LangSwitcher.jsx'
 import ThemeSwitcher from '../components/ThemeSwitcher.jsx'
 import Avatar from '../components/Avatar.jsx'
@@ -22,6 +23,10 @@ export default function ProfilePage() {
   const [pseudoSaved, setPseudoSaved] = useState(false)
   const [pseudoError, setPseudoError] = useState('')
   const [avatarLoading, setAvatarLoading] = useState(false)
+  const [suggestion, setSuggestion] = useState('')
+  const [suggestionLoading, setSuggestionLoading] = useState(false)
+  const [suggestionSent, setSuggestionSent] = useState(false)
+  const [suggestionError, setSuggestionError] = useState('')
 
   const avatarRef = useRef()
 
@@ -58,6 +63,29 @@ export default function ProfilePage() {
     if (error) setPseudoError(error.code === '23505' ? 'Ce pseudo est déjà pris' : 'Erreur, réessaie')
     else { await fetchProfile(profile.id); setPseudoSaved(true); setTimeout(() => setPseudoSaved(false), 2000) }
     setPseudoLoading(false)
+  }
+
+  async function sendSuggestion() {
+    if (!suggestion.trim()) return
+    setSuggestionLoading(true); setSuggestionError('')
+    try {
+      await emailjs.send(
+        'service_bbb70tq',
+        'template_2a9gdww',
+        {
+          from_name: profile?.username || 'Anonyme',
+          message: suggestion.trim(),
+          to_email: 'timothe.briffaz@gmail.com',
+        },
+        'jEDp0otbRY0hCS1RR'
+      )
+      setSuggestionSent(true)
+      setSuggestion('')
+      setTimeout(() => setSuggestionSent(false), 4000)
+    } catch (err) {
+      setSuggestionError("Erreur d'envoi, réessaie plus tard")
+    }
+    setSuggestionLoading(false)
   }
 
   async function handleAvatar(e) {
