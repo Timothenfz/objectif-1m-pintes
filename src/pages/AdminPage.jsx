@@ -41,20 +41,29 @@ export default function AdminPage() {
     setReportsLoading(true)
     const { data, error } = await supabase
       .from('reports')
-      .select(`
-        id, pinte_id, reason, status, created_at,
-        pintes (
-          id, numero_global, photo_url, lieu, type_boisson,
-          profiles ( username )
-        )
-      `)
+      .select('id, pinte_id, reason, status, created_at')
       .order('created_at', { ascending: false })
 
     if (error) { console.error('fetchReports error:', error); setReportsLoading(false); return }
 
+    // Récupérer les pintes séparément pour éviter les problèmes de FK
+    const pinteIds = [...new Set((data || []).map(r => r.pinte_id).filter(Boolean))]
+    let pintesMap = {}
+    if (pinteIds.length > 0) {
+      const { data: pintesData } = await supabase
+        .from('pintes')
+        .select('id, numero_global, photo_url, lieu, profiles(username)')
+        .in('id', pinteIds)
+      for (const p of (pintesData || [])) {
+        pintesMap[p.id] = p
+      }
+    }
+    // Attacher les pintes aux reports
+    const enriched = (data || []).map(r => ({ ...r, pintes: pintesMap[r.pinte_id] || null }))
+
     // Regrouper par pinte_id : une seule carte par pinte signalée
     const grouped = {}
-    for (const r of (data || [])) {
+    for (const r of enriched) {
       const key = r.pinte_id || `no-pinte-${r.id}`
       if (!grouped[key]) {
         grouped[key] = {
@@ -270,11 +279,7 @@ export default function AdminPage() {
                           <div style={{ fontSize: 11, color: 'var(--tx2)', marginTop: 2 }}>
                             {pinte.profiles?.username || 'Anonyme'}{pinte.lieu ? ` · ${pinte.lieu}` : ''}
                           </div>
-                          {pinte.type_boisson && (
-                            <div style={{ fontSize: 10, color: 'var(--tx2)', fontStyle: 'italic', marginTop: 1 }}>
-                              {pinte.type_boisson}
-                            </div>
-                          )}
+
                         </div>
                       </div>
                     ) : (
