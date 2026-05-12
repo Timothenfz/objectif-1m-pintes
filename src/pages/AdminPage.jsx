@@ -39,10 +39,18 @@ export default function AdminPage() {
 
   async function fetchReports() {
     setReportsLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('reports')
-      .select('*, pintes(id, numero_global, photo_url, lieu, type_boisson, profiles(username))')
+      .select(`
+        id, pinte_id, reason, status, created_at,
+        pintes (
+          id, numero_global, photo_url, lieu, type_boisson,
+          profiles ( username )
+        )
+      `)
       .order('created_at', { ascending: false })
+
+    if (error) { console.error('fetchReports error:', error); setReportsLoading(false); return }
 
     // Regrouper par pinte_id : une seule carte par pinte signalée
     const grouped = {}
@@ -54,6 +62,7 @@ export default function AdminPage() {
           count: 1,
           reasons: [r.reason],
           allIds: [r.id],
+          status: r.status,
         }
       } else {
         grouped[key].count++
@@ -76,9 +85,12 @@ export default function AdminPage() {
   }
 
   async function ignoreReport(group) {
-    // Ignorer tous les signalements de ce groupe
     await supabase.from('reports').update({ status: 'ignored' }).in('id', group.allIds)
-    setReports(prev => prev.map(r => r.pinte_id === group.pinte_id ? { ...r, status: 'ignored' } : r))
+    setReports(prev => prev.map(r =>
+      (r.pinte_id === group.pinte_id || r.id === group.id)
+        ? { ...r, status: 'ignored' }
+        : r
+    ))
   }
 
   async function deleteReportedPinte(group, pinteId) {
@@ -86,7 +98,11 @@ export default function AdminPage() {
     await supabase.from('pintes').delete().eq('id', pinteId)
     await supabase.rpc('renumeroter_pintes')
     await supabase.from('reports').update({ status: 'deleted' }).in('id', group.allIds)
-    setReports(prev => prev.map(r => r.pinte_id === group.pinte_id ? { ...r, status: 'deleted' } : r))
+    setReports(prev => prev.map(r =>
+      (r.pinte_id === group.pinte_id || r.id === group.id)
+        ? { ...r, status: 'deleted' }
+        : r
+    ))
     fetchStats()
   }
 

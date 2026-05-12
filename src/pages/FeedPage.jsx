@@ -32,11 +32,15 @@ function ReportModal({ pinte, onClose, onReported }) {
   async function submitReport() {
     if (!selectedReason) return
     setLoading(true)
-    await supabase.from('reports').insert({
+    const { error } = await supabase.from('reports').insert({
       pinte_id: pinte.id,
       reason: selectedReason,
-      status: 'new',
     })
+    if (error) {
+      console.error('Erreur signalement:', error)
+      setLoading(false)
+      return
+    }
     setDone(true)
     setLoading(false)
     setTimeout(() => {
