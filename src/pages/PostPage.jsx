@@ -72,9 +72,18 @@ async function checkAndUnlockBadges(userId, newProfile, pinte) {
   const hour = new Date(pinte.created_at || Date.now()).getHours()
   const dayOfWeek = new Date().getDay()
 
+  // Vérifier si l'utilisateur est 1er du classement
+  const { data: topProfile } = await supabase
+    .from('profiles')
+    .select('id')
+    .order('total_perso', { ascending: false })
+    .limit(1)
+    .single()
+  const isFirst = topProfile?.id === userId
+
   const state = {
     total_perso: newProfile?.total_perso || 0,
-    streak: 1, // simplifié
+    streak: 1,
     hasEarlyPost: hour < 10,
     hasNightPost: hour >= 0 && hour < 4,
     hasHappyHour: hour >= 17 && hour < 19,
@@ -87,7 +96,7 @@ async function checkAndUnlockBadges(userId, newProfile, pinte) {
     canettes: 0,
     pinteMaison: 0,
     referrals: 0,
-    isFirst: false,
+    isFirst,
     hasWhiteNight: hour >= 3 && hour < 5,
     hasGoldenPint: pinte.numero_global === 1000 || pinte.numero_global === 10000,
     chatMessages: 0,
@@ -197,7 +206,7 @@ export default function PostPage() {
     if (hit) setMilestone(hit)
 
     // Envoyer notifs nouvelle pinte (fire and forget)
-    // Notifs nouvelle pinte désactivées (trop de bruit)
+    // Notifs nouvelle pinte désactivées
     // sendNotifNouvellesPintes(user.id, profile?.username || 'Quelqu\'un', numero, supabase)
 
     // Vérifier et débloquer les badges
