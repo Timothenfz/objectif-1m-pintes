@@ -4,10 +4,11 @@ import { useAuth } from '../hooks/useAuth.jsx'
 import { useNavigate } from 'react-router-dom'
 
 const REASON_LABELS = {
-  spam: '🚫 Spam',
-  inappropriate: '⚠️ Inapproprié',
-  harassment: '😔 Harcèlement',
-  fake: 'ℹ️ Fausses infos',
+  not_pint: '🍺 Pas une pinte',
+  not_beer: '❌ Pas de la bière',
+  too_empty: '📉 Verre trop vide',
+  selfie: '🤳 Selfie / pas le verre',
+  offensive: '🤬 Message offensant',
   other: '… Autre',
 }
 
@@ -19,6 +20,7 @@ export default function AdminPage() {
   const [msg, setMsg] = useState('')
   const [reports, setReports] = useState([])
   const [reportsLoading, setReportsLoading] = useState(true)
+  const [zoomedImage, setZoomedImage] = useState(null)
 
   useEffect(() => {
     if (!profile?.is_admin) { navigate('/'); return }
@@ -123,6 +125,34 @@ export default function AdminPage() {
 
   return (
     <div style={{ minHeight: '100dvh', paddingBottom: 100, background: 'var(--bg)' }}>
+
+      {/* Modale zoom image */}
+      {zoomedImage && (
+        <div
+          onClick={() => setZoomedImage(null)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)',
+            zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 16,
+          }}
+        >
+          <img
+            src={zoomedImage}
+            alt="Aperçu"
+            style={{ maxWidth: '100%', maxHeight: '90dvh', borderRadius: 12, objectFit: 'contain' }}
+          />
+          <button
+            onClick={() => setZoomedImage(null)}
+            style={{
+              position: 'absolute', top: 16, right: 16,
+              width: 36, height: 36, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.15)', border: 'none',
+              color: '#fff', fontSize: 18, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >✕</button>
+        </div>
+      )}
       <div style={{ padding: '52px 16px 20px' }}>
         <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 32, color: 'var(--am)' }}>⚡ ADMIN</div>
         <div style={{ fontSize: 12, color: 'var(--tx2)', marginTop: 2 }}>Panneau d'administration</div>
@@ -175,7 +205,13 @@ export default function AdminPage() {
                     {pinte ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                         {pinte.photo_url ? (
-                          <img src={pinte.photo_url} alt="" style={{ width: 52, height: 52, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+                          <img
+                            src={pinte.photo_url}
+                            alt=""
+                            onClick={() => setZoomedImage(pinte.photo_url)}
+                            style={{ width: 52, height: 52, borderRadius: 8, objectFit: 'cover', flexShrink: 0, cursor: 'zoom-in' }}
+                            title="Cliquer pour agrandir"
+                          />
                         ) : (
                           <div style={{ width: 52, height: 52, borderRadius: 8, background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🍺</div>
                         )}

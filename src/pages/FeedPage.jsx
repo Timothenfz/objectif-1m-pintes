@@ -16,10 +16,11 @@ function timeAgo(dateStr) {
 }
 
 const REPORT_REASONS = [
-  { value: 'spam', label: '🚫 Spam ou publicité' },
-  { value: 'inappropriate', label: '⚠️ Contenu inapproprié' },
-  { value: 'harassment', label: '😔 Harcèlement' },
-  { value: 'fake', label: 'ℹ️ Fausses informations' },
+  { value: 'not_pint', label: '🍺 Pas une pinte (mauvaise contenance)' },
+  { value: 'not_beer', label: '❌ Pas de la bière' },
+  { value: 'too_empty', label: '📉 Verre trop vide' },
+  { value: 'selfie', label: '🤳 C\'est un selfie / pas le verre' },
+  { value: 'offensive', label: '🤬 Message offensant ou inapproprié' },
   { value: 'other', label: '… Autre' },
 ]
 
