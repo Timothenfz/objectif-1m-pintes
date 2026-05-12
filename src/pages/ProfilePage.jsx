@@ -196,6 +196,45 @@ export default function ProfilePage() {
 
 
 
+      {/* Suggestion d'amélioration */}
+      <div style={{ padding: '4px 12px 16px' }}>
+        <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 6, fontWeight: 500 }}>💡 Proposer une amélioration</div>
+        <textarea
+          value={suggestion}
+          onChange={e => setSuggestion(e.target.value)}
+          placeholder="Une idée pour améliorer l'app ? (bug, feature, design...)"
+          rows={3}
+          style={{
+            width: '100%', padding: '10px 12px',
+            background: 'var(--input-bg)', border: '1px solid var(--border)',
+            borderRadius: 9, color: 'var(--tx)', fontSize: 13,
+            fontFamily: 'DM Sans,sans-serif', outline: 'none',
+            resize: 'none', boxSizing: 'border-box',
+          }}
+        />
+        {suggestionError && (
+          <div style={{ fontSize: 11, color: '#f87171', marginTop: 4 }}>{suggestionError}</div>
+        )}
+        {suggestionSent && (
+          <div style={{ fontSize: 11, color: '#4ade80', marginTop: 4 }}>✓ Merci pour ta suggestion !</div>
+        )}
+        <button
+          onClick={sendSuggestion}
+          disabled={suggestionLoading || !suggestion.trim()}
+          style={{
+            marginTop: 8, width: '100%', padding: '11px 0',
+            background: suggestion.trim() ? 'var(--am)' : 'var(--bg3)',
+            border: '1px solid var(--border)',
+            borderRadius: 9, color: suggestion.trim() ? '#0d0d0d' : 'var(--tx2)',
+            fontSize: 13, fontWeight: 500, fontFamily: 'DM Sans,sans-serif',
+            cursor: suggestion.trim() && !suggestionLoading ? 'pointer' : 'not-allowed',
+            opacity: suggestionLoading ? 0.6 : 1, transition: 'all .2s',
+          }}
+        >
+          {suggestionLoading ? 'Envoi...' : suggestionSent ? '✓ Envoyée !' : 'Envoyer'}
+        </button>
+      </div>
+
       {/* Langue + Thème */}
       <div style={{ padding: '0 12px 14px' }}>
         <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 8, fontWeight: 500 }}>{t('profile_lang')}</div>

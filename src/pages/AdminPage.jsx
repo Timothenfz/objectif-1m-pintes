@@ -41,24 +41,52 @@ export default function AdminPage() {
     setReportsLoading(true)
     const { data } = await supabase
       .from('reports')
-      .select('*, pintes(id, numero_global, photo_url, lieu, profiles(username))')
+      .select('*, pintes(id, numero_global, photo_url, lieu, type_boisson, profiles(username))')
       .order('created_at', { ascending: false })
-      .limit(50)
-    setReports(data || [])
+
+    // Regrouper par pinte_id : une seule carte par pinte signalée
+    const grouped = {}
+    for (const r of (data || [])) {
+      const key = r.pinte_id || `no-pinte-${r.id}`
+      if (!grouped[key]) {
+        grouped[key] = {
+          ...r,
+          count: 1,
+          reasons: [r.reason],
+          allIds: [r.id],
+        }
+      } else {
+        grouped[key].count++
+        grouped[key].allIds.push(r.id)
+        if (!grouped[key].reasons.includes(r.reason)) {
+          grouped[key].reasons.push(r.reason)
+        }
+        // Si au moins un signalement est 'new', le groupe reste 'new'
+        if (r.status === 'new') grouped[key].status = 'new'
+      }
+    }
+    // Trier : new en premier, puis par count décroissant
+    const sorted = Object.values(grouped).sort((a, b) => {
+      if (a.status === 'new' && b.status !== 'new') return -1
+      if (a.status !== 'new' && b.status === 'new') return 1
+      return b.count - a.count
+    })
+    setReports(sorted)
     setReportsLoading(false)
   }
 
-  async function ignoreReport(reportId) {
-    await supabase.from('reports').update({ status: 'ignored' }).eq('id', reportId)
-    setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: 'ignored' } : r))
+  async function ignoreReport(group) {
+    // Ignorer tous les signalements de ce groupe
+    await supabase.from('reports').update({ status: 'ignored' }).in('id', group.allIds)
+    setReports(prev => prev.map(r => r.pinte_id === group.pinte_id ? { ...r, status: 'ignored' } : r))
   }
 
-  async function deleteReportedPinte(reportId, pinteId) {
+  async function deleteReportedPinte(group, pinteId) {
     if (!window.confirm('Supprimer cette pinte ? Les numéros seront recalculés.')) return
     await supabase.from('pintes').delete().eq('id', pinteId)
     await supabase.rpc('renumeroter_pintes')
-    await supabase.from('reports').update({ status: 'deleted' }).eq('id', reportId)
-    setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: 'deleted' } : r))
+    await supabase.from('reports').update({ status: 'deleted' }).in('id', group.allIds)
+    setReports(prev => prev.map(r => r.pinte_id === group.pinte_id ? { ...r, status: 'deleted' } : r))
     fetchStats()
   }
 
@@ -189,17 +217,21 @@ export default function AdminPage() {
               {pendingReports.map(report => {
                 const pinte = report.pintes
                 return (
-                  <div key={report.id} style={{
+                  <div key={report.pinte_id || report.id} style={{
                     background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)',
                     borderRadius: 12, padding: '12px',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    {/* Header : badge count + raisons */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
                       <span style={{
                         background: 'rgba(239,68,68,0.15)', color: '#f87171',
-                        borderRadius: 20, fontSize: 11, padding: '2px 8px', fontWeight: 500,
-                      }}>Nouveau</span>
-                      <span style={{ fontSize: 12, color: 'var(--tx2)' }}>
-                        {REASON_LABELS[report.reason] || report.reason}
+                        borderRadius: 20, fontSize: 11, padding: '2px 8px', fontWeight: 600,
+                        flexShrink: 0,
+                      }}>
+                        🚩 {report.count} signalement{report.count > 1 ? 's' : ''}
+                      </span>
+                      <span style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.4 }}>
+                        {(report.reasons || [report.reason]).map(r => REASON_LABELS[r] || r).join(' · ')}
                       </span>
                     </div>
                     {pinte ? (
@@ -209,19 +241,24 @@ export default function AdminPage() {
                             src={pinte.photo_url}
                             alt=""
                             onClick={() => setZoomedImage(pinte.photo_url)}
-                            style={{ width: 52, height: 52, borderRadius: 8, objectFit: 'cover', flexShrink: 0, cursor: 'zoom-in' }}
-                            title="Cliquer pour agrandir"
+                            style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover', flexShrink: 0, cursor: 'zoom-in', border: '2px solid rgba(239,68,68,0.25)' }}
+                            title="Toucher pour agrandir"
                           />
                         ) : (
-                          <div style={{ width: 52, height: 52, borderRadius: 8, background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🍺</div>
+                          <div style={{ width: 64, height: 64, borderRadius: 8, background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>🍺</div>
                         )}
-                        <div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, color: 'var(--tx)', fontWeight: 500 }}>
                             Pinte #{pinte.numero_global}
                           </div>
-                          <div style={{ fontSize: 11, color: 'var(--tx2)' }}>
+                          <div style={{ fontSize: 11, color: 'var(--tx2)', marginTop: 2 }}>
                             {pinte.profiles?.username || 'Anonyme'}{pinte.lieu ? ` · ${pinte.lieu}` : ''}
                           </div>
+                          {pinte.type_boisson && (
+                            <div style={{ fontSize: 10, color: 'var(--tx2)', fontStyle: 'italic', marginTop: 1 }}>
+                              {pinte.type_boisson}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ) : (
@@ -229,7 +266,7 @@ export default function AdminPage() {
                     )}
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button
-                        onClick={() => ignoreReport(report.id)}
+                        onClick={() => ignoreReport(report)}
                         style={{
                           flex: 1, padding: '9px', borderRadius: 8, cursor: 'pointer',
                           background: 'var(--bg3)', border: '1px solid var(--border)',
@@ -240,7 +277,7 @@ export default function AdminPage() {
                       </button>
                       {pinte && (
                         <button
-                          onClick={() => deleteReportedPinte(report.id, pinte.id)}
+                          onClick={() => deleteReportedPinte(report, pinte.id)}
                           style={{
                             flex: 1, padding: '9px', borderRadius: 8, cursor: 'pointer',
                             background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
@@ -266,20 +303,23 @@ export default function AdminPage() {
                       const pinte = report.pintes
                       const isDeleted = report.status === 'deleted'
                       return (
-                        <div key={report.id} style={{
+                        <div key={report.pinte_id || report.id} style={{
                           background: 'var(--bg3)', border: '1px solid var(--border)',
                           borderRadius: 10, padding: '10px', opacity: 0.6,
                         }}>
-                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                             <span style={{
                               background: isDeleted ? 'rgba(245,166,35,0.15)' : 'var(--bg2)',
                               color: isDeleted ? 'var(--am)' : 'var(--tx2)',
-                              borderRadius: 20, fontSize: 10, padding: '2px 8px',
+                              borderRadius: 20, fontSize: 10, padding: '2px 8px', flexShrink: 0,
                             }}>
                               {isDeleted ? '🗑 Supprimé' : '✓ Ignoré'}
                             </span>
+                            {report.count > 1 && (
+                              <span style={{ fontSize: 10, color: 'var(--tx2)' }}>{report.count} signalements</span>
+                            )}
                             <span style={{ fontSize: 11, color: 'var(--tx2)' }}>
-                              {REASON_LABELS[report.reason] || report.reason}
+                              {(report.reasons || [report.reason]).map(r => REASON_LABELS[r] || r).join(' · ')}
                               {pinte ? ` · Pinte #${pinte.numero_global}` : ''}
                             </span>
                           </div>
