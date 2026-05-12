@@ -125,7 +125,7 @@ function ReportModal({ pinte, onClose, onReported }) {
   )
 }
 
-function PinteCard({ pinte, index, isAdmin, onDelete, reportedIds, onOpenReport }) {
+function PinteCard({ pinte, index, isAdmin, onDelete, reportedIds, onOpenReport, onNavigate }) {
   const alreadyReported = reportedIds.has(pinte.id)
 
   async function deletePinte() {
@@ -144,10 +144,10 @@ function PinteCard({ pinte, index, isAdmin, onDelete, reportedIds, onOpenReport 
     }}>
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px' }}>
-        <div onClick={() => pinte.user_id && navigate(`/u/${pinte.user_id}`)} style={{ cursor: pinte.user_id ? 'pointer' : 'default' }}>
+        <div onClick={() => pinte.user_id && onNavigate && onNavigate(pinte.user_id)} style={{ cursor: pinte.user_id ? 'pointer' : 'default' }}>
           <Avatar username={pinte.profiles?.username} avatarUrl={pinte.profiles?.avatar_url} size={38} border />
         </div>
-        <div style={{ flex:1, minWidth:0 }} onClick={() => pinte.user_id && navigate(`/u/${pinte.user_id}`)} style={{ flex:1, minWidth:0, cursor: pinte.user_id ? 'pointer' : 'default' }}>
+        <div onClick={() => pinte.user_id && onNavigate && onNavigate(pinte.user_id)} style={{ flex:1, minWidth:0, cursor: pinte.user_id ? 'pointer' : 'default' }}>
           <div style={{ fontSize:14, fontWeight:500, color:'var(--tx)' }}>{pinte.profiles?.username || 'Anonyme'}</div>
           <div style={{ fontSize:11, color:'var(--tx2)', marginTop:1 }}>
             {pinte.lieu || 'Lieu inconnu'} · {timeAgo(pinte.created_at)}
@@ -327,6 +327,7 @@ export default function FeedPage() {
               reportedIds={reportedIds}
               onOpenReport={setReportModal}
               onDelete={pid => setPintes(prev => prev.filter(x => x.id !== pid))}
+              onNavigate={userId => navigate(`/u/${userId}`)}
             />
           ))
         )}
