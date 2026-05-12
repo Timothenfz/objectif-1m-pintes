@@ -28,9 +28,6 @@ export const BADGES = [
   { id: 'instigator',    cat: 'Soirée',    rarity: 'Rare',        icon: '🫵', name_fr: 'Instigateur',         name_en: 'Instigator',        desc_fr: 'Premier à poster dans la journée', desc_en: 'First to post of the day', check: (s) => s.firstOfDay >= 5 },
 
   // FUN
-  { id: 'can_pride',     cat: 'Fun',       rarity: 'Commun',      icon: '🥫', name_fr: 'Canette Pride',      name_en: 'Can Pride',         desc_fr: '3 pintes en canette',         desc_en: '3 canned pints',            check: (s) => s.canettes >= 3 },
-  { id: 'homebrew',      cat: 'Fun',       rarity: 'Peu commun',  icon: '🏠', name_fr: 'Maison Brewing',     name_en: 'Home Brewing',      desc_fr: '5 pintes maison',             desc_en: '5 home pints',              check: (s) => s.pinteMaison >= 5 },
-  { id: 'ambassador',    cat: 'Fun',       rarity: 'Rare',        icon: '🤝', name_fr: 'Ambassadeur',        name_en: 'Ambassador',        desc_fr: 'Parrainer 3 membres',         desc_en: 'Refer 3 members',           check: (s) => s.referrals >= 3 },
   { id: 'photographer',  cat: 'Fun',       rarity: 'Commun',      icon: '📸', name_fr: 'Photographe',        name_en: 'Photographer',      desc_fr: '20 pintes postées',           desc_en: '20 pints posted',           check: (s) => s.total_perso >= 20 },
 
   // RARE
@@ -40,7 +37,6 @@ export const BADGES = [
   { id: 'social_king',   cat: 'Rare',      rarity: 'Rare',        icon: '💬', name_fr: 'Roi du Chat',        name_en: 'Chat King',         desc_fr: '50 messages dans le chat',    desc_en: '50 chat messages',          check: (s) => s.chatMessages >= 50 },
   { id: 'reactor',       cat: 'Fun',       rarity: 'Commun',      icon: '😂', name_fr: 'Réacteur',           name_en: 'Reactor',           desc_fr: '30 réactions postées',        desc_en: '30 reactions posted',       check: (s) => s.reactions >= 30 },
   { id: 'commentator',   cat: 'Fun',       rarity: 'Peu commun',  icon: '🗣', name_fr: 'Commentateur',       name_en: 'Commentator',       desc_fr: '20 commentaires postés',      desc_en: '20 comments posted',        check: (s) => s.commentaires >= 20 },
-  { id: 'globe_brassicole', cat: 'Rare',    rarity: 'Légendaire',  icon: '🌍', name_fr: 'Globe Trotter Brassicole', name_en: 'Beer Globe Trotter', desc_fr: 'Poster une pinte sur 5 continents', desc_en: 'Post a pint on 5 continents', check: (s) => s.continents >= 5 },
 ]
 
 export const CATEGORIES = ['Tous', 'Classique', 'Streak', 'Heure', 'Lieux', 'Soirée', 'Fun', 'Rare']
