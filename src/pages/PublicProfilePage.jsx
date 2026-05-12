@@ -35,6 +35,7 @@ export default function PublicProfilePage() {
 
   async function fetchAll() {
     setLoading(true)
+    try {
 
     // Profil
     const { data: prof } = await supabase
@@ -65,7 +66,7 @@ export default function PublicProfilePage() {
     // Rang all-time
     const { data: allProfiles } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, total_perso')
       .order('total_perso', { ascending: false })
     const rank = (allProfiles || []).findIndex(p => p.id === userId)
     setRankAllTime(rank >= 0 ? rank + 1 : null)
@@ -91,6 +92,7 @@ export default function PublicProfilePage() {
 
     const weekCounts = {}
     for (const p of (weekData || [])) {
+      if (!p.user_id) continue
       weekCounts[p.user_id] = (weekCounts[p.user_id] || 0) + 1
     }
     const weekRanked = Object.entries(weekCounts).sort((a, b) => b[1] - a[1])
@@ -98,6 +100,10 @@ export default function PublicProfilePage() {
     setRankWeek(weekRank >= 0 ? weekRank + 1 : null)
 
     setLoading(false)
+    } catch(err) {
+      console.error('PublicProfile error:', err)
+      setLoading(false)
+    }
   }
 
   const isMe = user?.id === userId
