@@ -22,7 +22,7 @@ export default function PublicProfilePage() {
 
   const [profile, setProfile] = useState(null)
   const [pintes, setPintes] = useState([])
-  const [badges, setBadges] = useState([])
+  const [badges, setBadges] = useState(new Set())
   const [rankAllTime, setRankAllTime] = useState(null)
   const [rankWeek, setRankWeek] = useState(null)
   const [pintesWeek, setPintesWeek] = useState(0)
