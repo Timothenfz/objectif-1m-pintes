@@ -127,6 +127,7 @@ function ReportModal({ pinte, onClose, onReported }) {
 
 function PinteCard({ pinte, index, isAdmin, onDelete, reportedIds, onOpenReport, onNavigate }) {
   const alreadyReported = reportedIds.has(pinte.id)
+  const [zoomedImage, setZoomedImage] = useState(null)
 
   async function deletePinte() {
     if (!window.confirm('Supprimer cette pinte ? Les numéros seront recalculés.')) return
@@ -174,8 +175,32 @@ function PinteCard({ pinte, index, isAdmin, onDelete, reportedIds, onOpenReport,
         </div>
       </div>
 
-      {/* Photo */}
-      <div style={{ aspectRatio:'4/3', background:'var(--bg3)', overflow:'hidden' }}>
+      {/* Zoom image modale */}
+      {zoomedImage && (
+        <div
+          onClick={() => setZoomedImage(null)}
+          style={{
+            position:'fixed', inset:0, background:'rgba(0,0,0,0.92)',
+            zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center',
+            padding:16,
+          }}
+        >
+          <img src={zoomedImage} alt="" style={{ maxWidth:'100%', maxHeight:'90dvh', borderRadius:12, objectFit:'contain' }} />
+          <button onClick={() => setZoomedImage(null)} style={{
+            position:'absolute', top:16, right:16,
+            width:36, height:36, borderRadius:'50%',
+            background:'rgba(255,255,255,0.15)', border:'none',
+            color:'#fff', fontSize:18, cursor:'pointer',
+            display:'flex', alignItems:'center', justifyContent:'center',
+          }}>✕</button>
+        </div>
+      )}
+
+      {/* Photo cliquable */}
+      <div
+        onClick={() => pinte.photo_url && setZoomedImage(pinte.photo_url)}
+        style={{ aspectRatio:'4/3', background:'var(--bg3)', overflow:'hidden', cursor: pinte.photo_url ? 'zoom-in' : 'default' }}
+      >
         {pinte.photo_url ? (
           <img src={pinte.photo_url} alt={`Pinte #${pinte.numero_global}`}
             style={{ width:'100%', height:'100%', objectFit:'cover' }} loading="lazy" />
@@ -190,9 +215,10 @@ function PinteCard({ pinte, index, isAdmin, onDelete, reportedIds, onOpenReport,
         </div>
       )}
 
+      {/* Réactions + Commenter sur la même ligne */}
       <Reactions pinteId={pinte.id} />
 
-      {/* Bouton signaler */}
+      {/* Signaler en dessous */}
       <div style={{ padding:'0 14px 12px', display:'flex', justifyContent:'flex-end' }}>
         <button
           onClick={() => !alreadyReported && onOpenReport(pinte)}

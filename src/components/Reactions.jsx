@@ -305,30 +305,33 @@ export default function Reactions({ pinteId, style }) {
           {showPicker && <EmojiPicker onPick={toggleReaction} onClose={() => setShowPicker(false)} />}
         </div>
 
-        {/* Ligne commentaires */}
-        <div style={{ marginTop:8, display:'flex', alignItems:'flex-start', gap:8, justifyContent:'space-between' }}>
+        {/* Ligne réactions + commenter sur la même ligne */}
+        <div style={{ marginTop:6, display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
+          {/* Preview top commentaire */}
           <div style={{ flex:1, minWidth:0 }}>
             {topComment && (
-              <div style={{ fontSize:12, color:'#c8c4bc', lineHeight:1.4 }}>
-                <span style={{ fontWeight:500, color:'#ede9e0', marginRight:5 }}>{topComment.profiles?.username}</span>
-                {topComment.texte.length > 60 ? topComment.texte.slice(0,60)+'…' : topComment.texte}
+              <div style={{ fontSize:11, color:'#c8c4bc', lineHeight:1.4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                <span style={{ fontWeight:500, color:'#ede9e0', marginRight:4 }}>{topComment.profiles?.username}</span>
+                {topComment.texte.length > 40 ? topComment.texte.slice(0,40)+'…' : topComment.texte}
               </div>
             )}
             {nbComments > 1 && (
               <button onClick={() => setShowComments(true)} style={{
                 background:'none', border:'none', cursor:'pointer', padding:0,
-                fontSize:11, color:'#7a7670', marginTop:3, fontFamily:'DM Sans,sans-serif',
+                fontSize:10, color:'#7a7670', marginTop:2, fontFamily:'DM Sans,sans-serif',
               }}>
                 Voir les {nbComments} commentaires
               </button>
             )}
           </div>
+          {/* Bouton Commenter aligné à droite */}
           <button onClick={() => setShowComments(true)} style={{
             display:'flex', alignItems:'center', gap:4, flexShrink:0,
-            background:'none', border:'none', cursor:'pointer', padding:0,
+            background:'none', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20,
+            cursor:'pointer', padding:'5px 10px',
             color:'#7a7670', fontSize:11, fontFamily:'DM Sans,sans-serif',
           }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
             </svg>
             {nbComments > 0 ? nbComments : 'Commenter'}
