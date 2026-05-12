@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth.jsx'
 import Avatar from '../components/Avatar.jsx'
-import { useNavigate } from 'react-router-dom'
 
 const MEDALS = ['🥇', '🥈', '🥉']
 
@@ -208,6 +208,7 @@ export default function RankingPage() {
               value={getValue(p)}
               period={period}
               maxVal={maxVal}
+              onPress={() => navigate(`/u/${p.id}`)}
             />
           ))
         )}
