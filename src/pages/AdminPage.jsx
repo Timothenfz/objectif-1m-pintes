@@ -3,16 +3,27 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { useNavigate } from 'react-router-dom'
 
+const REASON_LABELS = {
+  spam: '🚫 Spam',
+  inappropriate: '⚠️ Inapproprié',
+  harassment: '😔 Harcèlement',
+  fake: 'ℹ️ Fausses infos',
+  other: '… Autre',
+}
+
 export default function AdminPage() {
   const { profile } = useAuth()
   const navigate = useNavigate()
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
+  const [reports, setReports] = useState([])
+  const [reportsLoading, setReportsLoading] = useState(true)
 
   useEffect(() => {
     if (!profile?.is_admin) { navigate('/'); return }
     fetchStats()
+    fetchReports()
   }, [profile])
 
   async function fetchStats() {
@@ -24,9 +35,34 @@ export default function AdminPage() {
     setStats({ total, withPhoto, oldest1000: storage?.length || 0 })
   }
 
+  async function fetchReports() {
+    setReportsLoading(true)
+    const { data } = await supabase
+      .from('reports')
+      .select('*, pintes(id, numero_global, photo_url, lieu, profiles(username))')
+      .order('created_at', { ascending: false })
+      .limit(50)
+    setReports(data || [])
+    setReportsLoading(false)
+  }
+
+  async function ignoreReport(reportId) {
+    await supabase.from('reports').update({ status: 'ignored' }).eq('id', reportId)
+    setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: 'ignored' } : r))
+  }
+
+  async function deleteReportedPinte(reportId, pinteId) {
+    if (!window.confirm('Supprimer cette pinte ? Les numéros seront recalculés.')) return
+    await supabase.from('pintes').delete().eq('id', pinteId)
+    await supabase.rpc('renumeroter_pintes')
+    await supabase.from('reports').update({ status: 'deleted' }).eq('id', reportId)
+    setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: 'deleted' } : r))
+    fetchStats()
+  }
+
   async function purgerChat(keepLast) {
-    const msg = keepLast === 0 
-      ? 'Vider entièrement le chat ?' 
+    const msg = keepLast === 0
+      ? 'Vider entièrement le chat ?'
       : `Garder seulement les ${keepLast} derniers messages ?`
     if (!window.confirm(msg)) return
     setLoading(true); setMsg('')
@@ -50,7 +86,7 @@ export default function AdminPage() {
     setLoading(true); setMsg('')
 
     let query = supabase.from('pintes').select('id, photo_url').not('photo_url', 'is', null).not('user_id', 'is', null)
-    
+
     if (mode === 'oldest') {
       query = query.order('numero_global', { ascending: true }).limit(1000)
     } else {
@@ -62,16 +98,14 @@ export default function AdminPage() {
     const { data: pintes } = await query
     if (!pintes?.length) { setMsg('Aucune photo à supprimer.'); setLoading(false); return }
 
-    // Supprimer les fichiers du storage
     const paths = pintes
       .map(p => p.photo_url?.split('/pintes/')[1])
       .filter(Boolean)
-    
+
     if (paths.length) {
       await supabase.storage.from('pintes').remove(paths)
     }
 
-    // Mettre photo_url à null dans la DB
     const ids = pintes.map(p => p.id)
     for (let i = 0; i < ids.length; i += 100) {
       await supabase.from('pintes').update({ photo_url: null }).in('id', ids.slice(i, i + 100))
@@ -84,6 +118,9 @@ export default function AdminPage() {
 
   if (!profile?.is_admin) return null
 
+  const pendingReports = reports.filter(r => r.status === 'new')
+  const resolvedReports = reports.filter(r => r.status !== 'new')
+
   return (
     <div style={{ minHeight: '100dvh', paddingBottom: 100, background: 'var(--bg)' }}>
       <div style={{ padding: '52px 16px 20px' }}>
@@ -93,7 +130,145 @@ export default function AdminPage() {
 
       <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-        {/* Stats stockage */}
+        {/* ── SIGNALEMENTS ── */}
+        <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 18, color: 'var(--tx)' }}>
+              🚩 SIGNALEMENTS
+            </div>
+            {pendingReports.length > 0 && (
+              <div style={{
+                background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
+                color: '#f87171', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                padding: '2px 10px',
+              }}>
+                {pendingReports.length} en attente
+              </div>
+            )}
+          </div>
+
+          {reportsLoading ? (
+            <div style={{ fontSize: 13, color: 'var(--tx2)', textAlign: 'center', padding: '20px 0' }}>Chargement…</div>
+          ) : reports.length === 0 ? (
+            <div style={{ fontSize: 13, color: 'var(--tx2)', textAlign: 'center', padding: '20px 0' }}>
+              Aucun signalement pour le moment ✅
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {/* En attente */}
+              {pendingReports.map(report => {
+                const pinte = report.pintes
+                return (
+                  <div key={report.id} style={{
+                    background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)',
+                    borderRadius: 12, padding: '12px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <span style={{
+                        background: 'rgba(239,68,68,0.15)', color: '#f87171',
+                        borderRadius: 20, fontSize: 11, padding: '2px 8px', fontWeight: 500,
+                      }}>Nouveau</span>
+                      <span style={{ fontSize: 12, color: 'var(--tx2)' }}>
+                        {REASON_LABELS[report.reason] || report.reason}
+                      </span>
+                    </div>
+                    {pinte ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                        {pinte.photo_url ? (
+                          <img src={pinte.photo_url} alt="" style={{ width: 52, height: 52, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+                        ) : (
+                          <div style={{ width: 52, height: 52, borderRadius: 8, background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🍺</div>
+                        )}
+                        <div>
+                          <div style={{ fontSize: 13, color: 'var(--tx)', fontWeight: 500 }}>
+                            Pinte #{pinte.numero_global}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--tx2)' }}>
+                            {pinte.profiles?.username || 'Anonyme'}{pinte.lieu ? ` · ${pinte.lieu}` : ''}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 10 }}>Pinte introuvable (déjà supprimée ?)</div>
+                    )}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        onClick={() => ignoreReport(report.id)}
+                        style={{
+                          flex: 1, padding: '9px', borderRadius: 8, cursor: 'pointer',
+                          background: 'var(--bg3)', border: '1px solid var(--border)',
+                          color: 'var(--tx2)', fontSize: 12,
+                        }}
+                      >
+                        👁 Ignorer
+                      </button>
+                      {pinte && (
+                        <button
+                          onClick={() => deleteReportedPinte(report.id, pinte.id)}
+                          style={{
+                            flex: 1, padding: '9px', borderRadius: 8, cursor: 'pointer',
+                            background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                            color: '#f87171', fontSize: 12, fontWeight: 500,
+                          }}
+                        >
+                          🗑 Supprimer la pinte
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+
+              {/* Résolus (repliables) */}
+              {resolvedReports.length > 0 && (
+                <details style={{ marginTop: 4 }}>
+                  <summary style={{ fontSize: 12, color: 'var(--tx2)', cursor: 'pointer', padding: '4px 0' }}>
+                    {resolvedReports.length} signalement{resolvedReports.length > 1 ? 's' : ''} traité{resolvedReports.length > 1 ? 's' : ''}
+                  </summary>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                    {resolvedReports.map(report => {
+                      const pinte = report.pintes
+                      const isDeleted = report.status === 'deleted'
+                      return (
+                        <div key={report.id} style={{
+                          background: 'var(--bg3)', border: '1px solid var(--border)',
+                          borderRadius: 10, padding: '10px', opacity: 0.6,
+                        }}>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <span style={{
+                              background: isDeleted ? 'rgba(245,166,35,0.15)' : 'var(--bg2)',
+                              color: isDeleted ? 'var(--am)' : 'var(--tx2)',
+                              borderRadius: 20, fontSize: 10, padding: '2px 8px',
+                            }}>
+                              {isDeleted ? '🗑 Supprimé' : '✓ Ignoré'}
+                            </span>
+                            <span style={{ fontSize: 11, color: 'var(--tx2)' }}>
+                              {REASON_LABELS[report.reason] || report.reason}
+                              {pinte ? ` · Pinte #${pinte.numero_global}` : ''}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </details>
+              )}
+            </div>
+          )}
+
+          <button
+            onClick={fetchReports}
+            style={{
+              marginTop: 12, width: '100%', padding: '9px',
+              background: 'var(--bg3)', border: '1px solid var(--border)',
+              borderRadius: 8, color: 'var(--tx2)', fontSize: 12, cursor: 'pointer',
+            }}
+          >
+            ↺ Actualiser les signalements
+          </button>
+        </div>
+
+        {/* ── STOCKAGE ── */}
         {stats && (
           <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px' }}>
             <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 18, color: 'var(--tx)', marginBottom: 12 }}>STOCKAGE PHOTOS</div>
@@ -113,7 +288,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Purge photos */}
+        {/* ── PURGE PHOTOS ── */}
         <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px' }}>
           <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 18, color: 'var(--tx)', marginBottom: 6 }}>PURGER LES PHOTOS</div>
           <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 14, lineHeight: 1.5 }}>
@@ -143,7 +318,7 @@ export default function AdminPage() {
           {msg && <div style={{ marginTop: 10, fontSize: 13, color: '#4ade80' }}>{msg}</div>}
         </div>
 
-        {/* Raccourci vers feed pour supprimer pintes individuelles */}
+        {/* ── MODÉRATION ── */}
         <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px' }}>
           <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 18, color: 'var(--tx)', marginBottom: 6 }}>MODÉRATION</div>
           <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 10 }}>
@@ -167,7 +342,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Purge chat */}
+        {/* ── PURGE CHAT ── */}
         <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px' }}>
           <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 18, color: 'var(--tx)', marginBottom: 6 }}>PURGER LE CHAT</div>
           <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 14, lineHeight: 1.5 }}>

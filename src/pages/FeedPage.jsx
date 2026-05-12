@@ -15,11 +15,117 @@ function timeAgo(dateStr) {
   return `il y a ${Math.floor(h / 24)}j`
 }
 
-function PinteCard({ pinte, index, isAdmin, onDelete }) {
+const REPORT_REASONS = [
+  { value: 'spam', label: '🚫 Spam ou publicité' },
+  { value: 'inappropriate', label: '⚠️ Contenu inapproprié' },
+  { value: 'harassment', label: '😔 Harcèlement' },
+  { value: 'fake', label: 'ℹ️ Fausses informations' },
+  { value: 'other', label: '… Autre' },
+]
+
+function ReportModal({ pinte, onClose, onReported }) {
+  const [selectedReason, setSelectedReason] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [done, setDone] = useState(false)
+
+  async function submitReport() {
+    if (!selectedReason) return
+    setLoading(true)
+    await supabase.from('reports').insert({
+      pinte_id: pinte.id,
+      reason: selectedReason,
+      status: 'new',
+    })
+    setDone(true)
+    setLoading(false)
+    setTimeout(() => {
+      onReported(pinte.id)
+      onClose()
+    }, 1200)
+  }
+
+  return (
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 999, padding: '0 20px',
+      }}
+    >
+      <div style={{
+        background: 'var(--card-bg)', border: '1px solid var(--border)',
+        borderRadius: 20, padding: 20, width: '100%', maxWidth: 360,
+      }}>
+        {done ? (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={{ fontSize: 36, marginBottom: 8 }}>✅</div>
+            <div style={{ color: 'var(--tx)', fontSize: 14 }}>Signalement envoyé</div>
+          </div>
+        ) : (
+          <>
+            <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 20, color: 'var(--tx)', marginBottom: 4 }}>
+              🚩 SIGNALER CETTE PINTE
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 16 }}>
+              Pinte #{pinte.numero_global} de {pinte.profiles?.username || 'Anonyme'}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+              {REPORT_REASONS.map(r => (
+                <button
+                  key={r.value}
+                  onClick={() => setSelectedReason(r.value)}
+                  style={{
+                    padding: '10px 14px', borderRadius: 10, cursor: 'pointer',
+                    fontSize: 13, textAlign: 'left', transition: 'all .15s',
+                    background: selectedReason === r.value ? 'rgba(239,68,68,0.12)' : 'var(--bg3)',
+                    border: selectedReason === r.value ? '1px solid rgba(239,68,68,0.4)' : '1px solid var(--border)',
+                    color: selectedReason === r.value ? '#f87171' : 'var(--tx)',
+                  }}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={onClose}
+                style={{
+                  flex: 1, padding: '11px', borderRadius: 10, cursor: 'pointer',
+                  background: 'var(--bg3)', border: '1px solid var(--border)',
+                  color: 'var(--tx2)', fontSize: 13,
+                }}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={submitReport}
+                disabled={!selectedReason || loading}
+                style={{
+                  flex: 1, padding: '11px', borderRadius: 10,
+                  cursor: selectedReason && !loading ? 'pointer' : 'not-allowed',
+                  background: selectedReason ? 'rgba(239,68,68,0.15)' : 'var(--bg3)',
+                  border: selectedReason ? '1px solid rgba(239,68,68,0.35)' : '1px solid var(--border)',
+                  color: selectedReason ? '#f87171' : 'var(--tx2)', fontSize: 13, fontWeight: 500,
+                  opacity: loading ? 0.6 : 1,
+                }}
+              >
+                Signaler
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function PinteCard({ pinte, index, isAdmin, onDelete, reportedIds, onOpenReport }) {
+  const alreadyReported = reportedIds.has(pinte.id)
+
   async function deletePinte() {
     if (!window.confirm('Supprimer cette pinte ? Les numéros seront recalculés.')) return
     await supabase.from('pintes').delete().eq('id', pinte.id)
-    // Renuméroter toutes les pintes
     await supabase.rpc('renumeroter_pintes')
     onDelete(pinte.id)
   }
@@ -40,7 +146,6 @@ function PinteCard({ pinte, index, isAdmin, onDelete }) {
             {pinte.lieu || 'Lieu inconnu'} · {timeAgo(pinte.created_at)}
           </div>
         </div>
-        {/* Badge numéro + bouton suppression admin */}
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
           <div style={{
             background:'var(--am)', color:'#0a0a0a',
@@ -79,6 +184,24 @@ function PinteCard({ pinte, index, isAdmin, onDelete }) {
       )}
 
       <Reactions pinteId={pinte.id} />
+
+      {/* Bouton signaler */}
+      <div style={{ padding:'0 14px 12px', display:'flex', justifyContent:'flex-end' }}>
+        <button
+          onClick={() => !alreadyReported && onOpenReport(pinte)}
+          style={{
+            display:'flex', alignItems:'center', gap:4,
+            padding:'5px 10px', borderRadius:20, fontSize:11,
+            cursor: alreadyReported ? 'default' : 'pointer',
+            background: alreadyReported ? 'rgba(239,68,68,0.08)' : 'transparent',
+            border: alreadyReported ? '1px solid rgba(239,68,68,0.2)' : '1px solid var(--border)',
+            color: alreadyReported ? '#f87171' : 'var(--tx2)',
+            transition:'all .15s',
+          }}
+        >
+          🚩 {alreadyReported ? 'Signalé' : 'Signaler'}
+        </button>
+      </div>
     </div>
   )
 }
@@ -89,6 +212,8 @@ export default function FeedPage() {
   const [pintes, setPintes] = useState([])
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
+  const [reportModal, setReportModal] = useState(null)
+  const [reportedIds, setReportedIds] = useState(new Set())
   const { profile } = useAuth()
   const isAdmin = profile?.is_admin === true
 
@@ -123,6 +248,10 @@ export default function FeedPage() {
     const { count } = await supabase.from('pintes')
       .select('*', { count: 'exact', head: true })
     setTotal(count || 0)
+  }
+
+  function handleReported(pinteId) {
+    setReportedIds(prev => new Set([...prev, pinteId]))
   }
 
   const pct = ((total / 1000000) * 100).toFixed(3)
@@ -186,11 +315,21 @@ export default function FeedPage() {
             <PinteCard
               key={p.id} pinte={p} index={i}
               isAdmin={isAdmin}
+              reportedIds={reportedIds}
+              onOpenReport={setReportModal}
               onDelete={pid => setPintes(prev => prev.filter(x => x.id !== pid))}
             />
           ))
         )}
       </div>
+
+      {reportModal && (
+        <ReportModal
+          pinte={reportModal}
+          onClose={() => setReportModal(null)}
+          onReported={handleReported}
+        />
+      )}
 
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
