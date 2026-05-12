@@ -35,6 +35,17 @@ export default function CartePage() {
     }
   }, [tab, pintes])
 
+  // Cleanup : détruire la carte quand on quitte la page
+  useEffect(() => {
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove()
+        mapInstanceRef.current = null
+        markersLayerRef.current = null
+      }
+    }
+  }, [])
+
   async function fetchData() {
     const [{ data: pintesData }, { data: villesData }] = await Promise.all([
       supabase.from('pintes')
@@ -54,17 +65,26 @@ export default function CartePage() {
     setLoading(false)
   }
 
+  const markersLayerRef = useRef(null)
+
   function initMapWithData(pintesData) {
     if (!mapRef.current) return
 
     function addMarkers(L, map) {
+      // Nettoyer les anciens markers avant d'en ajouter de nouveaux
+      if (markersLayerRef.current) {
+        markersLayerRef.current.clearLayers()
+      } else {
+        markersLayerRef.current = L.layerGroup().addTo(map)
+      }
+
       pintesData.forEach(p => {
         const icon = L.divIcon({
           className: '',
           html: `<div style="width:30px;height:30px;border-radius:50%;background:#f5a623;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.4);">🍺</div>`,
           iconSize: [30, 30], iconAnchor: [15, 15],
         })
-        const marker = L.marker([p.latitude, p.longitude], { icon }).addTo(map)
+        const marker = L.marker([p.latitude, p.longitude], { icon })
         marker.bindPopup(`
           <div style="font-family:DM Sans,sans-serif;text-align:center;min-width:120px;">
             <div style="font-weight:500;font-size:13px;">${p.profiles?.username || 'Anonyme'}</div>
@@ -73,16 +93,20 @@ export default function CartePage() {
             ${p.photo_url ? `<img src="${p.photo_url}" style="width:100%;border-radius:6px;margin-top:6px;max-height:80px;object-fit:cover;"/>` : ''}
           </div>
         `)
+        markersLayerRef.current.addLayer(marker)
       })
 
-      if (pintesData.length > 0) {
+      // fitBounds sur TOUS les markers, pas juste les nouveaux
+      if (pintesData.length > 1) {
         const coords = pintesData.map(p => [p.latitude, p.longitude])
         try { map.fitBounds(coords, { padding: [40, 40], maxZoom: 14 }) }
-        catch(e) { map.setView(coords[0], 12) }
+        catch(e) { map.setView(coords[0], 8) }
+      } else if (pintesData.length === 1) {
+        map.setView([pintesData[0].latitude, pintesData[0].longitude], 12)
       }
     }
 
-    // Si carte déjà créée, juste ajouter les markers
+    // Si carte déjà créée : détruire et recréer pour éviter l'écran blanc au reload
     if (mapInstanceRef.current) {
       addMarkers(window.L, mapInstanceRef.current)
       mapInstanceRef.current.invalidateSize()
@@ -92,6 +116,11 @@ export default function CartePage() {
     // Charger Leaflet et créer la carte
     function createMap() {
       if (!window.L || !mapRef.current) return
+      // Éviter double init (Leaflet plante si le div est déjà initialisé)
+      if (mapRef.current._leaflet_id) {
+        mapRef.current._leaflet_id = null
+        mapRef.current.innerHTML = ''
+      }
       if (mapInstanceRef.current) return
 
       const map = window.L.map(mapRef.current, {
@@ -105,6 +134,7 @@ export default function CartePage() {
 
       window.L.control.zoom({ position: 'topright' }).addTo(map)
       mapInstanceRef.current = map
+      markersLayerRef.current = null // reset layer ref pour la nouvelle instance
 
       addMarkers(window.L, map)
     }
