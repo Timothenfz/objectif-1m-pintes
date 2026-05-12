@@ -87,10 +87,15 @@ export default function ChatPage() {
     const compressed = await compressImage(file)
     const path = `chat/${user.id}/${Date.now()}.jpg`
     const { error: uploadError } = await supabase.storage.from('pintes').upload(path, compressed)
-    if (!uploadError) {
-      const { data: { publicUrl } } = supabase.storage.from('pintes').getPublicUrl(path)
-      await supabase.from('messages_chat').insert({ user_id: user.id, texte: `[photo]${publicUrl}` })
+    if (uploadError) {
+      console.error('Erreur upload photo chat:', uploadError)
+      alert('Erreur upload : ' + uploadError.message)
+      setUploadingPhoto(false)
+      photoRef.current.value = ''
+      return
     }
+    const { data: { publicUrl } } = supabase.storage.from('pintes').getPublicUrl(path)
+    await supabase.from('messages_chat').insert({ user_id: user.id, texte: `[photo]${publicUrl}` })
     setUploadingPhoto(false)
     photoRef.current.value = ''
   }
