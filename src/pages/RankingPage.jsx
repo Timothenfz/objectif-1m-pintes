@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth.jsx'
 import Avatar from '../components/Avatar.jsx'
+import { useNavigate } from 'react-router-dom'
 
 const MEDALS = ['🥇', '🥈', '🥉']
 
@@ -31,19 +32,20 @@ function getDateFilter(period) {
   return null
 }
 
-function Row({ profile, rank, isMe, value, period }) {
+function Row({ profile, rank, isMe, value, period, onPress }) {
   const daysInactive = profile.derniere_activite
     ? Math.floor((Date.now() - new Date(profile.derniere_activite).getTime()) / 86400000)
     : 999
   const inactive = daysInactive >= 30 && period === 'alltime'
 
   return (
-    <div style={{
+    <div onClick={onPress} style={{
       display: 'flex', alignItems: 'center', gap: 10,
       padding: '10px 14px',
       background: isMe ? 'rgba(245,166,35,0.06)' : 'transparent',
       borderBottom: '1px solid var(--border)',
       borderLeft: isMe ? '3px solid var(--am)' : '3px solid transparent',
+      cursor: 'pointer',
     }}>
       <div style={{ width: 26, textAlign: 'center', flexShrink: 0, fontSize: rank < 3 ? 18 : 13, fontFamily: rank < 3 ? 'inherit' : 'Bebas Neue,sans-serif', color: 'var(--tx2)' }}>
         {rank < 3 ? MEDALS[rank] : rank + 1}
@@ -84,6 +86,7 @@ function Row({ profile, rank, isMe, value, period }) {
 import ProfileAvatar from '../components/ProfileAvatar.jsx'
 
 export default function RankingPage() {
+  const navigate = useNavigate()
   const [period, setPeriod] = useState('alltime')
   const [profiles, setProfiles] = useState([])
   const [loading, setLoading] = useState(true)

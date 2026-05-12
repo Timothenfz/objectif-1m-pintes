@@ -15,6 +15,7 @@ import AdminPage from './pages/AdminPage.jsx'
 import InstallPage from './pages/InstallPage.jsx'
 import CGUPage from './pages/CGUPage.jsx'
 import StatsPage from './pages/StatsPage.jsx'
+import PublicProfilePage from './pages/PublicProfilePage.jsx'
 import Nav from './components/Nav.jsx'
 import CGUPopup from './components/CGUPopup.jsx'
 
@@ -65,6 +66,7 @@ function AppContent() {
         <Route path="/installer" element={<ProtectedRoute><InstallPage /></ProtectedRoute>} />
         <Route path="/cgu" element={<ProtectedRoute><CGUPage /></ProtectedRoute>} />
         <Route path="/profil" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/u/:userId" element={<ProtectedRoute><PublicProfilePage /></ProtectedRoute>} />
       </Routes>
       {user && !showCGU && <Nav />}
     </>

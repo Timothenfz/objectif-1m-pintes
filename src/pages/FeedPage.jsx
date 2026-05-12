@@ -144,8 +144,10 @@ function PinteCard({ pinte, index, isAdmin, onDelete, reportedIds, onOpenReport 
     }}>
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px' }}>
-        <Avatar username={pinte.profiles?.username} avatarUrl={pinte.profiles?.avatar_url} size={38} border />
-        <div style={{ flex:1, minWidth:0 }}>
+        <div onClick={() => pinte.user_id && navigate(`/u/${pinte.user_id}`)} style={{ cursor: pinte.user_id ? 'pointer' : 'default' }}>
+          <Avatar username={pinte.profiles?.username} avatarUrl={pinte.profiles?.avatar_url} size={38} border />
+        </div>
+        <div style={{ flex:1, minWidth:0 }} onClick={() => pinte.user_id && navigate(`/u/${pinte.user_id}`)} style={{ flex:1, minWidth:0, cursor: pinte.user_id ? 'pointer' : 'default' }}>
           <div style={{ fontSize:14, fontWeight:500, color:'var(--tx)' }}>{pinte.profiles?.username || 'Anonyme'}</div>
           <div style={{ fontSize:11, color:'var(--tx2)', marginTop:1 }}>
             {pinte.lieu || 'Lieu inconnu'} · {timeAgo(pinte.created_at)}
@@ -212,6 +214,7 @@ function PinteCard({ pinte, index, isAdmin, onDelete, reportedIds, onOpenReport 
 }
 
 import ProfileAvatar from '../components/ProfileAvatar.jsx'
+import { useNavigate } from 'react-router-dom'
 
 export default function FeedPage() {
   const [pintes, setPintes] = useState([])
@@ -220,6 +223,7 @@ export default function FeedPage() {
   const [reportModal, setReportModal] = useState(null)
   const [reportedIds, setReportedIds] = useState(new Set())
   const { profile } = useAuth()
+  const navigate = useNavigate()
   const isAdmin = profile?.is_admin === true
 
   useEffect(() => {
