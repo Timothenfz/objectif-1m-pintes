@@ -36,11 +36,11 @@ export default function StatsPage() {
       { data: firstPinte },
       { data: lastPinte },
     ] = await Promise.all([
-      supabase.from('pintes').select('*', { count: 'exact', head: true }).not('user_id', 'is', null),
+      supabase.from('pintes').select('*', { count: 'exact', head: true }),
       supabase.from('profiles').select('*', { count: 'exact', head: true }).gt('total_perso', 0),
       supabase.from('profiles').select('username, total_perso').order('total_perso', { ascending: false }).limit(1),
-      supabase.from('pintes').select('created_at').not('user_id', 'is', null).order('created_at', { ascending: true }).limit(1),
-      supabase.from('pintes').select('created_at').not('user_id', 'is', null).order('created_at', { ascending: false }).limit(1),
+      supabase.from('pintes').select('created_at').order('created_at', { ascending: true }).limit(1),
+      supabase.from('pintes').select('created_at').order('created_at', { ascending: false }).limit(1),
     ])
 
     const total = totalPintes || 0
