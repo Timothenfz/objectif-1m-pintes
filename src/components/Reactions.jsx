@@ -273,58 +273,41 @@ export default function Reactions({ pinteId, style }) {
   return (
     <>
       <div style={{ padding:'8px 12px', ...style }}>
-        {/* Ligne réactions */}
-        <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap', position:'relative' }}>
-          {sorted.map(r => (
-            <button key={r.emoji} onClick={() => toggleReaction(r.emoji)} style={{
-              display:'flex', alignItems:'center', gap:4,
-              padding:'4px 9px', borderRadius:20,
-              background: myReactions.has(r.emoji) ? 'rgba(245,166,35,0.15)' : 'rgba(255,255,255,0.06)',
-              border: `1px solid ${myReactions.has(r.emoji) ? 'rgba(245,166,35,0.4)' : 'rgba(255,255,255,0.1)'}`,
-              cursor:'pointer', transition:'all .15s',
-              fontSize:15, lineHeight:1,
-              fontFamily:'DM Sans,sans-serif',
-            }}>
-              <span>{r.emoji}</span>
-              <span style={{ fontSize:11, color: myReactions.has(r.emoji) ? '#f5a623' : '#7a7670', fontWeight:500 }}>{r.nb}</span>
-            </button>
-          ))}
-
-          {/* Bouton ajouter emoji */}
-          <button onClick={() => setShowPicker(p => !p)} style={{
-            width:30, height:28, borderRadius:20,
-            background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)',
-            cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center',
-            color:'#7a7670', transition:'all .15s',
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
-            </svg>
-          </button>
-
-          {showPicker && <EmojiPicker onPick={toggleReaction} onClose={() => setShowPicker(false)} />}
-        </div>
-
-        {/* Ligne réactions + commenter sur la même ligne */}
-        <div style={{ marginTop:6, display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
-          {/* Preview top commentaire */}
-          <div style={{ flex:1, minWidth:0 }}>
-            {topComment && (
-              <div style={{ fontSize:11, color:'#c8c4bc', lineHeight:1.4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                <span style={{ fontWeight:500, color:'#ede9e0', marginRight:4 }}>{topComment.profiles?.username}</span>
-                {topComment.texte.length > 40 ? topComment.texte.slice(0,40)+'…' : topComment.texte}
-              </div>
-            )}
-            {nbComments > 1 && (
-              <button onClick={() => setShowComments(true)} style={{
-                background:'none', border:'none', cursor:'pointer', padding:0,
-                fontSize:10, color:'#7a7670', marginTop:2, fontFamily:'DM Sans,sans-serif',
+        {/* Ligne 1 : emojis + bouton ajouter + Commenter tout à droite */}
+        <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'nowrap', position:'relative' }}>
+          {/* Emojis existants */}
+          <div style={{ display:'flex', alignItems:'center', gap:5, flexWrap:'wrap', flex:1, minWidth:0 }}>
+            {sorted.map(r => (
+              <button key={r.emoji} onClick={() => toggleReaction(r.emoji)} style={{
+                display:'flex', alignItems:'center', gap:4,
+                padding:'4px 9px', borderRadius:20,
+                background: myReactions.has(r.emoji) ? 'rgba(245,166,35,0.15)' : 'rgba(255,255,255,0.06)',
+                border: `1px solid ${myReactions.has(r.emoji) ? 'rgba(245,166,35,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                cursor:'pointer', transition:'all .15s',
+                fontSize:15, lineHeight:1,
+                fontFamily:'DM Sans,sans-serif',
               }}>
-                Voir les {nbComments} commentaires
+                <span>{r.emoji}</span>
+                <span style={{ fontSize:11, color: myReactions.has(r.emoji) ? '#f5a623' : '#7a7670', fontWeight:500 }}>{r.nb}</span>
               </button>
-            )}
+            ))}
+
+            {/* Bouton ajouter emoji */}
+            <button onClick={() => setShowPicker(p => !p)} style={{
+              width:30, height:28, borderRadius:20,
+              background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)',
+              cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center',
+              color:'#7a7670', transition:'all .15s', flexShrink:0,
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+              </svg>
+            </button>
+
+            {showPicker && <EmojiPicker onPick={toggleReaction} onClose={() => setShowPicker(false)} />}
           </div>
-          {/* Bouton Commenter aligné à droite */}
+
+          {/* Bouton Commenter — même ligne, tout à droite */}
           <button onClick={() => setShowComments(true)} style={{
             display:'flex', alignItems:'center', gap:4, flexShrink:0,
             background:'none', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20,
@@ -337,6 +320,24 @@ export default function Reactions({ pinteId, style }) {
             {nbComments > 0 ? nbComments : 'Commenter'}
           </button>
         </div>
+
+        {/* Ligne 2 : preview top commentaire si existe */}
+        {topComment && (
+          <div style={{ marginTop:6 }}>
+            <div style={{ fontSize:11, color:'#c8c4bc', lineHeight:1.4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+              <span style={{ fontWeight:500, color:'#ede9e0', marginRight:4 }}>{topComment.profiles?.username}</span>
+              {topComment.texte.length > 60 ? topComment.texte.slice(0,60)+'…' : topComment.texte}
+            </div>
+            {nbComments > 1 && (
+              <button onClick={() => setShowComments(true)} style={{
+                background:'none', border:'none', cursor:'pointer', padding:0,
+                fontSize:10, color:'#7a7670', marginTop:2, fontFamily:'DM Sans,sans-serif',
+              }}>
+                Voir les {nbComments} commentaires
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {showComments && (
