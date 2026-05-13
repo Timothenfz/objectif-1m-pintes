@@ -195,24 +195,29 @@ function StatsTab() {
     try {
       const [
         { count: totalPintes },
+        { count: pintesReelles },
         { count: membres },
         { data: topUser },
         { data: firstPinte },
       ] = await Promise.all([
         supabase.from('pintes').select('*', { count: 'exact', head: true }),
+        supabase.from('pintes').select('*', { count: 'exact', head: true }).not('user_id', 'is', null),
         supabase.from('profiles').select('*', { count: 'exact', head: true }).gt('total_perso', 0),
         supabase.from('profiles').select('username, total_perso').order('total_perso', { ascending: false }).limit(1),
         supabase.from('pintes').select('created_at').not('user_id', 'is', null).order('created_at', { ascending: true }).limit(1),
       ])
 
       const total = totalPintes || 0
+      const reelles = pintesReelles || 0
       const litres = Math.round(total * PINTE_LITRES)
-      const jours = firstPinte?.[0] ? Math.max(1, Math.floor((Date.now() - new Date(firstPinte[0].created_at).getTime()) / 86400000)) : 1
+      // Date de lancement du groupe : 19 avril 2026
+      const dateLancement = new Date('2026-04-19T00:00:00.000Z')
+      const jours = Math.max(1, Math.floor((Date.now() - dateLancement.getTime()) / 86400000))
 
       setStats({
         total, membres: membres || 0, litres,
-        litresParJour: (litres / jours).toFixed(1),
-        pintesParJour: (total / jours).toFixed(1),
+        litresParJour: (Math.round(reelles * PINTE_LITRES) / jours).toFixed(1),
+        pintesParJour: (reelles / jours).toFixed(1),
         piscines: (litres / 2500000).toFixed(6),
         baignoires: Math.round(litres / 200),
         camions: (litres / 30000).toFixed(3),
@@ -258,6 +263,7 @@ function StatsTab() {
       <StatCard emoji="📅" title="Jours depuis le début" value={stats.jours} sub="depuis le lancement du groupe" />
       <StatCard emoji="🍺" title="Pintes par jour (moyenne)" value={stats.pintesParJour} sub="au rythme actuel" />
       <StatCard emoji="💧" title="Litres par jour (moyenne)" value={`${stats.litresParJour} L`} sub="au rythme actuel" />
+      <StatCard emoji="📊" title="Pintes par personne (moyenne)" value={(stats.total / Math.max(stats.membres, 1)).toFixed(1)} sub={`sur ${stats.membres} membres actifs`} />
 
       {/* Argent */}
       <div style={{ fontSize: 12, color: 'var(--tx2)', fontWeight: 500, marginTop: 6, paddingLeft: 2 }}>💰 EN EUROS</div>
