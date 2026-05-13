@@ -47,10 +47,7 @@ function Row({ profile, rank, isMe, value, period, onPress }) {
           {isMe && <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 20, background: 'rgba(245,166,35,0.2)', color: 'var(--am)', flexShrink: 0 }}>toi</span>}
           {inactive && <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 20, background: 'rgba(239,68,68,0.15)', color: '#f87171', flexShrink: 0 }}>inactif</span>}
         </div>
-        <div style={{ height: 3, background: 'var(--bg3)', borderRadius: 2, marginTop: 5 }}>
-          <div style={{ height: 3, borderRadius: 2, background: 'var(--am)', width: `${Math.round((value / Math.max(value, 1)) * 100)}%` }} />
-        </div>
-        <div style={{ fontSize: 10, color: 'var(--tx2)', marginTop: 2 }}>
+        <div style={{ fontSize: 10, color: 'var(--tx2)', marginTop: 4 }}>
           {period === 'alltime'
             ? `depuis ${Math.floor((Date.now() - new Date(profile.date_arrivee || Date.now()).getTime()) / 86400000)}j`
             : profile.derniere_activite ? new Date(profile.derniere_activite).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '—'}
@@ -172,10 +169,24 @@ function ClassementTab({ me }) {
 }
 
 // ─── STATS ────────────────────────────────────────────────────
+const PINTE_LITRES = 0.568
+
+function StatCard({ emoji, title, value, sub, color }) {
+  return (
+    <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 14px', display: 'flex', alignItems: 'center', gap: 14 }}>
+      <div style={{ fontSize: 36, flexShrink: 0 }}>{emoji}</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 11, color: 'var(--tx2)', marginBottom: 2 }}>{title}</div>
+        <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 28, color: color || 'var(--am)', lineHeight: 1 }}>{value}</div>
+        {sub && <div style={{ fontSize: 11, color: 'var(--tx2)', marginTop: 2 }}>{sub}</div>}
+      </div>
+    </div>
+  )
+}
+
 function StatsTab() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [chartData, setChartData] = useState([])
 
   useEffect(() => { fetchStats() }, [])
 
@@ -183,42 +194,33 @@ function StatsTab() {
     setLoading(true)
     try {
       const [
-        { count: total },
-        { count: today },
-        { count: thisWeek },
-        { count: thisMonth },
-        { data: firstPinte },
+        { count: totalPintes },
+        { count: membres },
         { data: topUser },
-        { data: daily },
+        { data: firstPinte },
       ] = await Promise.all([
         supabase.from('pintes').select('*', { count: 'exact', head: true }),
-        supabase.from('pintes').select('*', { count: 'exact', head: true }).not('user_id', 'is', null).gte('created_at', new Date(new Date().setHours(0,0,0,0)).toISOString()),
-        supabase.from('pintes').select('*', { count: 'exact', head: true }).not('user_id', 'is', null).gte('created_at', (() => { const d = new Date(); d.setDate(d.getDate()-d.getDay()); d.setHours(0,0,0,0); return d.toISOString() })()),
-        supabase.from('pintes').select('*', { count: 'exact', head: true }).not('user_id', 'is', null).gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
-        supabase.from('pintes').select('created_at').not('user_id', 'is', null).order('created_at', { ascending: true }).limit(1),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).gt('total_perso', 0),
         supabase.from('profiles').select('username, total_perso').order('total_perso', { ascending: false }).limit(1),
-        supabase.from('pintes').select('created_at').not('user_id', 'is', null).order('created_at', { ascending: false }).limit(300),
+        supabase.from('pintes').select('created_at').not('user_id', 'is', null).order('created_at', { ascending: true }).limit(1),
       ])
 
-      const days = {}
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0)
-        days[d.toDateString()] = 0
-      }
-      ;(daily || []).forEach(p => {
-        const d = new Date(p.created_at).toDateString()
-        if (d in days) days[d]++
-      })
-      setChartData(Object.entries(days).map(([d, count]) => ({ label: new Date(d).toLocaleDateString('fr-FR', { weekday: 'short' }), count })))
+      const total = totalPintes || 0
+      const litres = Math.round(total * PINTE_LITRES)
+      const jours = firstPinte?.[0] ? Math.max(1, Math.floor((Date.now() - new Date(firstPinte[0].created_at).getTime()) / 86400000)) : 1
 
-      const daysRunning = firstPinte?.[0] ? Math.max(1, Math.floor((Date.now() - new Date(firstPinte[0].created_at).getTime()) / 86400000)) : 1
       setStats({
-        total: total || 0, today: today || 0, thisWeek: thisWeek || 0, thisMonth: thisMonth || 0,
-        daysRunning,
-        avgPerDay: Math.round((total || 0) / daysRunning * 10) / 10,
-        pct: ((total || 0) / 1000000 * 100).toFixed(3),
+        total, membres: membres || 0, litres,
+        litresParJour: (litres / jours).toFixed(1),
+        pintesParJour: (total / jours).toFixed(1),
+        piscines: (litres / 2500000).toFixed(6),
+        baignoires: Math.round(litres / 200),
+        camions: (litres / 30000).toFixed(3),
+        euros: Math.round(total * 8),
+        jours,
         topUser: topUser?.[0],
-        daysLeft: Math.round((1000000 - (total || 0)) / Math.max(1, Math.round((total || 0) / daysRunning))),
+        pctObjectif: ((total / 1000000) * 100).toFixed(3),
+        joursRestants: total > 0 ? Math.round((1000000 - total) / (total / jours)) : '∞',
       })
     } catch(e) { console.error(e) }
     setLoading(false)
@@ -227,56 +229,61 @@ function StatsTab() {
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx2)' }}>Chargement...</div>
   if (!stats) return null
 
-  const maxBar = Math.max(...chartData.map(d => d.count), 1)
-
   return (
-    <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {/* Progression */}
-      <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 14, padding: 14 }}>
-        <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 16, color: 'var(--tx)', marginBottom: 8 }}>🎯 PROGRESSION</div>
-        <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 36, color: 'var(--am)', lineHeight: 1 }}>
-          {stats.total.toLocaleString('fr-FR')}
+    <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+      {/* Objectif */}
+      <div style={{ background: 'linear-gradient(135deg, rgba(245,166,35,0.15), rgba(245,166,35,0.05))', border: '1px solid rgba(245,166,35,0.3)', borderRadius: 16, padding: '20px 16px', textAlign: 'center' }}>
+        <div style={{ fontSize: 13, color: 'var(--am)', fontWeight: 500, marginBottom: 6, letterSpacing: '.05em' }}>OBJECTIF 1 MILLION</div>
+        <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 52, color: 'var(--am)', lineHeight: 1 }}>{stats.total.toLocaleString('fr-FR')}</div>
+        <div style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 12 }}>pintes / 1 000 000</div>
+        <div style={{ background: 'var(--bg3)', borderRadius: 4, height: 8, overflow: 'hidden', marginBottom: 8 }}>
+          <div style={{ height: 8, borderRadius: 4, background: 'linear-gradient(90deg,#c4841a,#ffc85a)', width: `${Math.max(parseFloat(stats.pctObjectif), 0.02)}%`, minWidth: 6 }} />
         </div>
-        <div style={{ fontSize: 11, color: 'var(--tx2)', marginBottom: 10 }}>/ 1 000 000 pintes · {stats.pct}%</div>
-        <div style={{ height: 8, background: 'var(--bg3)', borderRadius: 4, overflow: 'hidden' }}>
-          <div style={{ height: 8, background: 'linear-gradient(90deg,#c4841a,#f5a623)', borderRadius: 4, width: `${Math.max(parseFloat(stats.pct), 0.02)}%`, transition: 'width .5s' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--tx2)' }}>
+          <span>{stats.pctObjectif}% accompli</span>
+          <span>~{typeof stats.joursRestants === 'number' ? stats.joursRestants.toLocaleString('fr-FR') : stats.joursRestants} jours restants</span>
         </div>
-        {stats.daysLeft > 0 && (
-          <div style={{ fontSize: 10, color: 'var(--tx2)', marginTop: 6 }}>À ce rythme : objectif dans ~{stats.daysLeft} jours</div>
-        )}
       </div>
 
-      {/* Grille */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      {/* Litres */}
+      <div style={{ fontSize: 12, color: 'var(--tx2)', fontWeight: 500, marginTop: 6, paddingLeft: 2 }}>💧 EN LITRES</div>
+      <StatCard emoji="🫙" title="Volume total bu" value={`${stats.litres.toLocaleString('fr-FR')} L`} sub={`soit ${(stats.litres/1000).toFixed(1)} hectolitres`} />
+      <StatCard emoji="🏊" title="Piscines olympiques" value={stats.piscines} sub="(2 500 000L par piscine)" color="var(--color-text-info, #60a5fa)" />
+      <StatCard emoji="🛁" title="Baignoires remplies" value={stats.baignoires.toLocaleString('fr-FR')} sub="(200L par baignoire)" />
+      <StatCard emoji="🚛" title="Camions citernes" value={stats.camions} sub="(30 000L par camion)" />
+
+      {/* Rythme */}
+      <div style={{ fontSize: 12, color: 'var(--tx2)', fontWeight: 500, marginTop: 6, paddingLeft: 2 }}>⚡ RYTHME</div>
+      <StatCard emoji="📅" title="Jours depuis le début" value={stats.jours} sub="depuis le lancement du groupe" />
+      <StatCard emoji="🍺" title="Pintes par jour (moyenne)" value={stats.pintesParJour} sub="au rythme actuel" />
+      <StatCard emoji="💧" title="Litres par jour (moyenne)" value={`${stats.litresParJour} L`} sub="au rythme actuel" />
+
+      {/* Argent */}
+      <div style={{ fontSize: 12, color: 'var(--tx2)', fontWeight: 500, marginTop: 6, paddingLeft: 2 }}>💰 EN EUROS</div>
+      <StatCard emoji="💸" title="Dépensé estimé" value={`${stats.euros.toLocaleString('fr-FR')} €`} sub="à 8€ la pinte en moyenne" color="#4ade80" />
+
+      {/* WTF */}
+      <div style={{ fontSize: 12, color: 'var(--tx2)', fontWeight: 500, marginTop: 6, paddingLeft: 2 }}>🤯 POUR RIGOLER</div>
+      <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {[
-          { label: "Aujourd'hui", value: stats.today, icon: '📅' },
-          { label: 'Cette semaine', value: stats.thisWeek, icon: '📆' },
-          { label: 'Ce mois', value: stats.thisMonth, icon: '🗓' },
-          { label: 'Moy. / jour', value: stats.avgPerDay, icon: '📊' },
-          { label: 'Jours actifs', value: stats.daysRunning, icon: '⏱' },
-          { label: 'Record perso', value: stats.topUser ? `${stats.topUser.total_perso} — ${stats.topUser.username}` : '—', icon: '👑' },
-        ].map(s => (
-          <div key={s.label} style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px' }}>
-            <div style={{ fontSize: 18, marginBottom: 4 }}>{s.icon}</div>
-            <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: s.label === 'Record perso' ? 13 : 22, color: 'var(--am)', lineHeight: 1.2 }}>{s.value}</div>
-            <div style={{ fontSize: 10, color: 'var(--tx2)', marginTop: 3 }}>{s.label}</div>
+          { emoji: '🏟', text: `Stade de France (81 000 places) : vous avez bu l'équivalent de ${(stats.litres / 81000).toFixed(2)} L par siège` },
+          { emoji: '🗼', text: `La tour Eiffel mesure 330m. En empilant vos pintes (15cm chacune), vous atteignez ${Math.round(stats.total * 0.15)}m de haut` },
+          { emoji: '🌍', text: `En mettant vos pintes en ligne (diamètre 7cm), vous couvrez ${(stats.total * 0.07 / 1000).toFixed(2)} km` },
+          { emoji: '🎂', text: `Si vous aviez bu une pinte par jour depuis votre naissance, vous auriez ${Math.round(stats.total / 365)} ans` },
+          { emoji: '🍺', text: `Le champion ${stats.topUser?.username || '?'} a bu ${stats.topUser?.total_perso || 0} pintes soit ${Math.round((stats.topUser?.total_perso || 0) * PINTE_LITRES)} litres` },
+        ].map((f, i) => (
+          <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '8px 0', borderBottom: i < 4 ? '1px solid var(--border)' : 'none' }}>
+            <span style={{ fontSize: 20, flexShrink: 0 }}>{f.emoji}</span>
+            <span style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.6 }}>{f.text}</span>
           </div>
         ))}
       </div>
 
-      {/* Graphe 7 jours */}
-      <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 14, padding: 14, marginBottom: 4 }}>
-        <div style={{ fontFamily: 'Bebas Neue,sans-serif', fontSize: 16, color: 'var(--tx)', marginBottom: 12 }}>📈 7 DERNIERS JOURS</div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 90 }}>
-          {chartData.map((d, i) => (
-            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' }}>
-              <div style={{ fontSize: 9, color: 'var(--tx2)' }}>{d.count || ''}</div>
-              <div style={{ width: '100%', background: i === chartData.length - 1 ? 'var(--am)' : 'rgba(245,166,35,0.3)', borderRadius: '4px 4px 0 0', height: `${Math.max((d.count / maxBar) * 55, d.count > 0 ? 4 : 0)}px`, transition: 'height .4s' }} />
-              <div style={{ fontSize: 9, color: 'var(--tx2)' }}>{d.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Groupe */}
+      <div style={{ fontSize: 12, color: 'var(--tx2)', fontWeight: 500, marginTop: 6, paddingLeft: 2 }}>👥 LE GROUPE</div>
+      <StatCard emoji="👑" title="MVP absolu" value={stats.topUser?.username || '—'} sub={`${stats.topUser?.total_perso || 0} pintes`} />
+      <StatCard emoji="👥" title="Membres actifs" value={stats.membres} sub="ont posté au moins 1 pinte" />
     </div>
   )
 }
