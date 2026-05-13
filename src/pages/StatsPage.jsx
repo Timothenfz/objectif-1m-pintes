@@ -209,7 +209,7 @@ function StatsTab() {
 
       const total = totalPintes || 0
       const reelles = pintesReelles || 0
-      const litres = Math.round(total * PINTE_LITRES)
+      const litres = Math.round(reelles * PINTE_LITRES)
       // Date de lancement du groupe : 19 avril 2026
       const dateLancement = new Date('2026-04-19T00:00:00.000Z')
       const jours = Math.max(1, Math.floor((Date.now() - dateLancement.getTime()) / 86400000))
