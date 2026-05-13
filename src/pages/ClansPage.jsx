@@ -15,7 +15,7 @@ const SHOP_ITEMS = [
 
 const EMOJIS = ['🐺','🦁','🐻','🦊','🐯','🦅','🐉','🦈','🔥','⚡','💀','👑','🍺','🎯','🏴‍☠️','🦄','🐊','🦂','🐝','🌊']
 
-function Boutique({ clan, onClose, onSuccess }) {
+function Boutique({ clan, isChef, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [msg, setMsg] = useState('')
@@ -137,6 +137,7 @@ function DetailClan({ clan, me, onBack, onRefresh }) {
   const [loading, setLoading] = useState(true)
   const [showBoutique, setShowBoutique] = useState(false)
   const isChef = clan.chef_id === me?.id
+
   const [quitterLoading, setQuitterLoading] = useState(false)
 
   async function quitterClan() {
@@ -187,7 +188,7 @@ function DetailClan({ clan, me, onBack, onRefresh }) {
 
   return (
     <div>
-      {showBoutique && <Boutique clan={clan} onClose={() => setShowBoutique(false)} onSuccess={() => { onRefresh(); fetchDetail() }} />}
+      {showBoutique && <Boutique clan={clan} isChef={isChef} onClose={() => setShowBoutique(false)} onSuccess={() => { onRefresh(); fetchDetail() }} />}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 16px 16px' }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--tx2)', fontSize: 13, cursor: 'pointer', padding: 0 }}>‹ Retour</button>
