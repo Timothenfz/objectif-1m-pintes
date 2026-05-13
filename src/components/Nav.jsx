@@ -2,10 +2,10 @@ import { useLocation, useNavigate } from 'react-router-dom'
 
 const TABS = [
   { path: '/', label: 'Feed', icon: (a) => <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={a?2.5:1.8} strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg> },
-  { path: '/classement', label: 'Top', icon: (a) => <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={a?2.5:1.8} strokeLinecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> },
+  { path: '/stats', label: 'Stats', icon: (a) => <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={a?2.5:1.8} strokeLinecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> },
   { path: '/badges', label: 'Badges', icon: (a) => <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={a?2.5:1.8} strokeLinecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> },
+  { path: '/clans', label: 'Clans', icon: (a) => <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={a?2.5:1.8} strokeLinecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> },
   { path: '/carte', label: 'Carte', icon: (a) => <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={a?2.5:1.8} strokeLinecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg> },
-  { path: '/stats', label: 'Stats', icon: (a) => <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={a?2.5:1.8} strokeLinecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><polyline points="3,20 21,20"/></svg> },
   { path: '/chat', label: 'Chat', icon: (a) => <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={a?2.5:1.8} strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> },
 ]
 
@@ -21,7 +21,6 @@ export default function Nav() {
         @keyframes pulse-fab { 0%,100%{box-shadow:0 4px 20px rgba(245,166,35,.5)} 50%{box-shadow:0 4px 28px rgba(245,166,35,.8)} }
       `}</style>
 
-      {/* Bouton flottant Poster */}
       {location.pathname !== '/chat' && location.pathname !== '/poster' && (
         <button onClick={() => navigate('/poster')} style={{
           position: 'fixed', bottom: 90, right: 18,
@@ -36,21 +35,10 @@ export default function Nav() {
         </button>
       )}
 
-      <nav style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0,
-        background: 'var(--nav-bg)', backdropFilter: 'blur(20px)',
-        borderTop: '1px solid var(--border)', zIndex: 100,
-      }}>
-        {/* Bandeau prévention */}
-        <div style={{
-          background: 'var(--tx)', color: 'var(--bg)',
-          fontSize: 9, textAlign: 'center', padding: '3px 14px',
-          lineHeight: 1.4, pointerEvents: 'none', userSelect: 'none',
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-        }}>
+      <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--nav-bg)', backdropFilter: 'blur(20px)', borderTop: '1px solid var(--border)', zIndex: 100 }}>
+        <div style={{ background: 'var(--tx)', color: 'var(--bg)', fontSize: 9, textAlign: 'center', padding: '3px 14px', lineHeight: 1.4, pointerEvents: 'none', userSelect: 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           🚗 L'abus d'alcool est dangereux pour la santé · À consommer avec modération · Ne pas boire et conduire
         </div>
-
         <div className="nav-scroll" style={{ height: 76, paddingRight: 64 }}>
           {TABS.map(tab => {
             const active = location.pathname === tab.path

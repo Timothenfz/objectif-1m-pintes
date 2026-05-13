@@ -5,7 +5,6 @@ import { ThemeProvider } from './hooks/useTheme.jsx'
 import { useState, useEffect } from 'react'
 import AuthPage from './pages/AuthPage.jsx'
 import FeedPage from './pages/FeedPage.jsx'
-import RankingPage from './pages/RankingPage.jsx'
 import PostPage from './pages/PostPage.jsx'
 import ProfilePage from './pages/ProfilePage.jsx'
 import CartePage from './pages/CartePage.jsx'
@@ -15,6 +14,7 @@ import AdminPage from './pages/AdminPage.jsx'
 import InstallPage from './pages/InstallPage.jsx'
 import CGUPage from './pages/CGUPage.jsx'
 import StatsPage from './pages/StatsPage.jsx'
+import ClansPage from './pages/ClansPage.jsx'
 import PublicProfilePage from './pages/PublicProfilePage.jsx'
 import Nav from './components/Nav.jsx'
 import CGUPopup from './components/CGUPopup.jsx'
@@ -40,9 +40,7 @@ function AppContent() {
   const [showCGU, setShowCGU] = useState(false)
 
   useEffect(() => {
-    if (user && !localStorage.getItem('cgu_accepted')) {
-      setShowCGU(true)
-    }
+    if (user && !localStorage.getItem('cgu_accepted')) setShowCGU(true)
   }, [user])
 
   function acceptCGU() {
@@ -56,17 +54,18 @@ function AppContent() {
       <Routes>
         <Route path="/auth" element={user ? <Navigate to="/" replace /> : <AuthPage />} />
         <Route path="/" element={<ProtectedRoute><FeedPage /></ProtectedRoute>} />
-        <Route path="/classement" element={<ProtectedRoute><RankingPage /></ProtectedRoute>} />
+        <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
+        <Route path="/clans" element={<ProtectedRoute><ClansPage /></ProtectedRoute>} />
         <Route path="/poster" element={<ProtectedRoute><PostPage /></ProtectedRoute>} />
         <Route path="/carte" element={<ProtectedRoute><CartePage /></ProtectedRoute>} />
         <Route path="/badges" element={<ProtectedRoute><BadgesPage /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-        <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
         <Route path="/installer" element={<ProtectedRoute><InstallPage /></ProtectedRoute>} />
         <Route path="/cgu" element={<ProtectedRoute><CGUPage /></ProtectedRoute>} />
         <Route path="/profil" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/u/:userId" element={<ProtectedRoute><PublicProfilePage /></ProtectedRoute>} />
+        <Route path="/classement" element={<Navigate to="/stats" replace />} />
       </Routes>
       {user && !showCGU && <Nav />}
     </>
