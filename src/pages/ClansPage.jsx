@@ -7,7 +7,7 @@ import ProfileAvatar from '../components/ProfileAvatar.jsx'
 
 // ─── BOUTIQUE ─────────────────────────────────────────────────
 const SHOP_ITEMS = [
-  { id: 'raid',    icon: '💥', name: 'Raid',       desc: 'Retire 10 pintes au clan adverse pendant 24h', cost: 100, color: '#f87171', bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.3)' },
+  { id: 'raid',    icon: '💥', name: 'Raid',       desc: 'Retire définitivement 20 pintes du trésor d\'un clan adverse', cost: 100, color: '#f87171', bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.3)' },
   { id: 'shield',  icon: '🛡', name: 'Bouclier',   desc: 'Protège le clan des raids pendant 48h',         cost: 50,  color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', border: 'rgba(96,165,250,0.25)' },
   { id: 'boost',   icon: '🚀', name: 'Boost x2',   desc: 'Chaque pinte compte double pendant 12h',        cost: 75,  color: 'var(--am)', bg: 'rgba(245,166,35,0.1)', border: 'rgba(245,166,35,0.3)' },
   { id: 'emoji',   icon: '🎨', name: 'Changer l\'emoji', desc: 'Nouveau look pour ton clan',               cost: 20,  color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)' },
@@ -20,15 +20,40 @@ function Boutique({ clan, onClose, onSuccess }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [msg, setMsg] = useState('')
 
+  const [showRaidPicker, setShowRaidPicker] = useState(false)
+  const [clansDisponibles, setClansDisponibles] = useState([])
+
   async function buy(item) {
     if (clan.tresor < item.cost) return setMsg('Pas assez de crédits dans le trésor !')
     if (item.id === 'emoji') { setShowEmojiPicker(true); return }
+    if (item.id === 'raid') {
+      // Charger les clans adverses
+      const { data } = await supabase.from('clans').select('id, nom, emoji, tresor').neq('id', clan.id).order('tresor', { ascending: false })
+      setClansDisponibles(data || [])
+      setShowRaidPicker(true)
+      return
+    }
     setLoading(true)
     await supabase.from('clans').update({ tresor: clan.tresor - item.cost }).eq('id', clan.id)
-    await supabase.from('clan_actions').insert({ clan_id: clan.id, type: item.id, expires_at: new Date(Date.now() + (item.id === 'shield' ? 48 : 12) * 3600000).toISOString() })
+    await supabase.from('clan_actions').insert({ clan_id: clan.id, type: item.id, expires_at: new Date(Date.now() + 12 * 3600000).toISOString() })
     setMsg(`✅ ${item.name} activé !`)
     setLoading(false)
     setTimeout(() => { onSuccess(); onClose() }, 1500)
+  }
+
+  async function lancerRaid(cible) {
+    setLoading(true)
+    setShowRaidPicker(false)
+    // Débiter le trésor du clan attaquant
+    await supabase.from('clans').update({ tresor: clan.tresor - 100 }).eq('id', clan.id)
+    // Retirer 20 pintes du trésor du clan cible (minimum 0)
+    const newTresor = Math.max(0, (cible.tresor || 0) - 20)
+    await supabase.from('clans').update({ tresor: newTresor }).eq('id', cible.id)
+    // Logger l'action
+    await supabase.from('clan_actions').insert({ clan_id: clan.id, type: 'raid' })
+    setMsg(`💥 Raid lancé sur ${cible.emoji} ${cible.nom} ! -20 pintes`)
+    setLoading(false)
+    setTimeout(() => { onSuccess(); onClose() }, 2000)
   }
 
   async function changeEmoji(emoji) {
@@ -53,7 +78,24 @@ function Boutique({ clan, onClose, onSuccess }) {
 
         {msg && <div style={{ background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#4ade80', marginBottom: 12 }}>{msg}</div>}
 
-        {showEmojiPicker ? (
+        {showRaidPicker ? (
+          <div>
+            <div style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 12 }}>Choisir le clan à raider (-20 pintes définitives)</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {clansDisponibles.map(c => (
+                <button key={c.id} onClick={() => lancerRaid(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, cursor: 'pointer', textAlign: 'left' }}>
+                  <span style={{ fontSize: 22 }}>{c.emoji}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, color: 'var(--tx)', fontWeight: 600 }}>{c.nom}</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx2)' }}>Trésor : {c.tresor} ⚡</div>
+                  </div>
+                  <span style={{ fontSize: 12, color: '#f87171', fontWeight: 600 }}>Raider 💥</span>
+                </button>
+              ))}
+              <button onClick={() => setShowRaidPicker(false)} style={{ padding: '10px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, color: 'var(--tx2)', fontSize: 12, cursor: 'pointer' }}>Annuler</button>
+            </div>
+          </div>
+        ) : showEmojiPicker ? (
           <div>
             <div style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 12 }}>Choisis un emoji (20 ⚡)</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -71,13 +113,13 @@ function Boutique({ clan, onClose, onSuccess }) {
                   <div style={{ fontSize: 13, color: 'var(--tx)', fontWeight: 600 }}>{item.name}</div>
                   <div style={{ fontSize: 11, color: 'var(--tx2)', marginTop: 2 }}>{item.desc}</div>
                 </div>
-                <button onClick={() => buy(item)} disabled={loading || clan.tresor < item.cost} style={{
-                  background: clan.tresor >= item.cost ? item.bg : 'var(--bg3)',
-                  border: `1px solid ${clan.tresor >= item.cost ? item.border : 'var(--border)'}`,
+                <button onClick={() => isChef && buy(item)} disabled={loading || !isChef || clan.tresor < item.cost} title={!isChef ? 'Seul le chef peut dépenser les crédits' : ''} style={{
+                  background: isChef && clan.tresor >= item.cost ? item.bg : 'var(--bg3)',
+                  border: `1px solid ${isChef && clan.tresor >= item.cost ? item.border : 'var(--border)'}`,
                   borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600,
-                  color: clan.tresor >= item.cost ? item.color : 'var(--tx2)',
-                  cursor: clan.tresor >= item.cost ? 'pointer' : 'not-allowed', flexShrink: 0,
-                }}>{item.cost} ⚡</button>
+                  color: isChef && clan.tresor >= item.cost ? item.color : 'var(--tx2)',
+                  cursor: isChef && clan.tresor >= item.cost ? 'pointer' : 'not-allowed', flexShrink: 0,
+                }}>{!isChef ? '🔒' : `${item.cost} ⚡`}</button>
               </div>
             ))}
           </div>
@@ -95,6 +137,17 @@ function DetailClan({ clan, me, onBack, onRefresh }) {
   const [loading, setLoading] = useState(true)
   const [showBoutique, setShowBoutique] = useState(false)
   const isChef = clan.chef_id === me?.id
+  const [quitterLoading, setQuitterLoading] = useState(false)
+
+  async function quitterClan() {
+    if (!window.confirm('Quitter ce clan ?')) return
+    setQuitterLoading(true)
+    await supabase.from('clan_membres').delete().eq('user_id', me.id).eq('clan_id', clan.id)
+    await supabase.from('profiles').update({ clan_id: null }).eq('id', me.id)
+    setQuitterLoading(false)
+    onBack()
+    onRefresh()
+  }
 
   useEffect(() => { fetchDetail() }, [clan.id])
 
@@ -145,11 +198,9 @@ function DetailClan({ clan, me, onBack, onRefresh }) {
             <div style={{ fontSize: 10, color: 'var(--tx2)' }}>{membres.length} membres · {totalPintes} pintes</div>
           </div>
         </div>
-        {isChef && (
-          <button onClick={() => setShowBoutique(true)} style={{ background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.3)', borderRadius: 10, padding: '8px 12px', fontSize: 12, color: 'var(--am)', fontWeight: 600, cursor: 'pointer' }}>
-            🏪 Boutique
-          </button>
-        )}
+        <button onClick={() => setShowBoutique(true)} style={{ background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.3)', borderRadius: 10, padding: '8px 12px', fontSize: 12, color: 'var(--am)', fontWeight: 600, cursor: 'pointer' }}>
+          🏪 Boutique
+        </button>
       </div>
 
       {/* Barre de progression palier */}
@@ -187,6 +238,15 @@ function DetailClan({ clan, me, onBack, onRefresh }) {
               ))}
             </div>
           </div>
+
+          {/* Bouton quitter */}
+          {!isChef && (
+            <div style={{ padding: '0 16px', marginBottom: 14 }}>
+              <button onClick={quitterClan} disabled={quitterLoading} style={{ width: '100%', padding: '12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, color: '#f87171', fontSize: 13, cursor: 'pointer', opacity: quitterLoading ? 0.6 : 1 }}>
+                🚪 Quitter le clan
+              </button>
+            </div>
+          )}
 
           {/* Activité récente */}
           {activite.length > 0 && (
@@ -238,7 +298,7 @@ function CreerClan({ credits, onClose, onSuccess }) {
     // Débiter les crédits
     await supabase.from('profiles').update({ credits: credits - 50, clan_id: clan.id }).eq('id', user.id)
     setLoading(false)
-    onSuccess()
+    onSuccess() // refresh immédiat
   }
 
   return (
