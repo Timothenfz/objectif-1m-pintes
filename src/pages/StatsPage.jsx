@@ -225,7 +225,13 @@ function StatsTab() {
         jours,
         topUser: topUser?.[0],
         pctObjectif: ((total / 1000000) * 100).toFixed(3),
-        joursRestants: total > 0 ? Math.round((1000000 - total) / (total / jours)) : '∞',
+        joursRestants: total > 0 ? Math.round((1000000 - total) / (total / jours)) : Infinity,
+        dateFinPrevue: total > 0 ? (() => {
+          const joursR = Math.round((1000000 - total) / (total / jours))
+          const date = new Date()
+          date.setDate(date.getDate() + joursR)
+          return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+        })() : '∞',
       })
     } catch(e) { console.error(e) }
     setLoading(false)
@@ -247,7 +253,7 @@ function StatsTab() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--tx2)' }}>
           <span>{stats.pctObjectif}% accompli</span>
-          <span>~{typeof stats.joursRestants === 'number' ? stats.joursRestants.toLocaleString('fr-FR') : stats.joursRestants} jours restants</span>
+          <span>~{isFinite(stats.joursRestants) ? stats.joursRestants.toLocaleString('fr-FR') : '∞'} jours restants</span>
         </div>
       </div>
 
@@ -261,9 +267,10 @@ function StatsTab() {
       {/* Rythme */}
       <div style={{ fontSize: 12, color: 'var(--tx2)', fontWeight: 500, marginTop: 6, paddingLeft: 2 }}>⚡ RYTHME</div>
       <StatCard emoji="📅" title="Jours depuis le début" value={stats.jours} sub="depuis le lancement du groupe" />
-      <StatCard emoji="🍺" title="Pintes par jour (moyenne)" value={stats.pintesParJour} sub="au rythme actuel" />
+
       <StatCard emoji="💧" title="Litres par jour (moyenne)" value={`${stats.litresParJour} L`} sub="au rythme actuel" />
-      <StatCard emoji="📊" title="Pintes par personne (moyenne)" value={(stats.total / Math.max(stats.membres, 1)).toFixed(1)} sub={`sur ${stats.membres} membres actifs`} />
+      <StatCard emoji="📊" title="Pintes par jour (moyenne)" value={stats.pintesParJour} sub={`${stats.total.toLocaleString('fr-FR')} pintes / ${stats.jours} jours`} />
+      <StatCard emoji="🏁" title="Prévision de fin" value={stats.dateFinPrevue} sub={`dans ~${stats.joursRestants.toLocaleString('fr-FR')} jours au rythme actuel`} color="#a78bfa" />
 
       {/* Argent */}
       <div style={{ fontSize: 12, color: 'var(--tx2)', fontWeight: 500, marginTop: 6, paddingLeft: 2 }}>💰 EN EUROS</div>
