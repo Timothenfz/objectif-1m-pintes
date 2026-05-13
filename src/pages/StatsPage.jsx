@@ -216,8 +216,8 @@ function StatsTab() {
 
       setStats({
         total, membres: membres || 0, litres,
-        litresParJour: (Math.round(reelles * PINTE_LITRES) / jours).toFixed(1),
-        pintesParJour: (reelles / jours).toFixed(1),
+        litresParJour: (litres / jours).toFixed(1),
+        pintesParJour: (total / jours).toFixed(1),
         piscines: (litres / 2500000).toFixed(6),
         baignoires: Math.round(litres / 200),
         camions: (litres / 30000).toFixed(3),
