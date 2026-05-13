@@ -270,7 +270,7 @@ function StatsTab() {
 
       <StatCard emoji="💧" title="Litres par jour (moyenne)" value={`${stats.litresParJour} L`} sub="au rythme actuel" />
       <StatCard emoji="📊" title="Pintes par jour (moyenne)" value={stats.pintesParJour} sub={`${stats.total.toLocaleString('fr-FR')} pintes / ${stats.jours} jours`} />
-      <StatCard emoji="🏁" title="Prévision de fin" value={stats.dateFinPrevue} sub={`dans ~${stats.joursRestants.toLocaleString('fr-FR')} jours au rythme actuel`} color="#a78bfa" />
+      <StatCard emoji="🏁" title="Prévision de fin" value={stats.dateFinPrevue} sub={`dans ~${isFinite(stats.joursRestants) ? stats.joursRestants.toLocaleString('fr-FR') : '∞'} jours au rythme actuel`} color="#a78bfa" />
 
       {/* Argent */}
       <div style={{ fontSize: 12, color: 'var(--tx2)', fontWeight: 500, marginTop: 6, paddingLeft: 2 }}>💰 EN EUROS</div>
