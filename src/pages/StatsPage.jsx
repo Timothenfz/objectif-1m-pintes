@@ -169,7 +169,7 @@ function ClassementTab({ me }) {
 }
 
 // ─── STATS ────────────────────────────────────────────────────
-const PINTE_LITRES = 0.568
+const PINTE_LITRES = 0.5
 
 function StatCard({ emoji, title, value, sub, color }) {
   return (
