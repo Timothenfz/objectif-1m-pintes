@@ -24,16 +24,16 @@ function getGPS() {
   return requestGPSPermission()
 }
 
-function compressImage(file, maxSizeKB = 400) {
+function compressImage(file, maxSizeKB = 150) {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     const img = new Image()
     const url = URL.createObjectURL(file)
     img.onload = () => {
-      // Redimensionner si trop grande
+      // Redimensionner : max 800px
       let w = img.width, h = img.height
-      const maxDim = 1200
+      const maxDim = 800
       if (w > maxDim || h > maxDim) {
         if (w > h) { h = Math.round(h * maxDim / w); w = maxDim }
         else { w = Math.round(w * maxDim / h); h = maxDim }
@@ -42,11 +42,11 @@ function compressImage(file, maxSizeKB = 400) {
       ctx.drawImage(img, 0, 0, w, h)
       URL.revokeObjectURL(url)
 
-      // Compresser en JPEG
-      let quality = 0.8
+      // Compresser en JPEG — qualité agressive pour réduire la bande passante
+      let quality = 0.65
       const tryCompress = () => {
         canvas.toBlob(blob => {
-          if (blob.size > maxSizeKB * 1024 && quality > 0.3) {
+          if (blob.size > maxSizeKB * 1024 && quality > 0.2) {
             quality -= 0.1
             tryCompress()
           } else {
@@ -183,7 +183,7 @@ export default function PostPage() {
 
     // Compresser la photo avant upload
     setEtape('upload')
-    const compressed = await compressImage(photo, 400)
+    const compressed = await compressImage(photo, 150)
     const path = `${user.id}/${Date.now()}.jpg`
     const { error: uploadError } = await supabase.storage.from('pintes').upload(path, compressed)
     if (uploadError) { setError(uploadError.message); setLoading(false); setEtape(''); return }
@@ -206,7 +206,6 @@ export default function PostPage() {
     if (hit) setMilestone(hit)
 
     // Envoyer notifs nouvelle pinte (fire and forget)
-    // Notifs nouvelle pinte désactivées
     // sendNotifNouvellesPintes(user.id, profile?.username || 'Quelqu\'un', numero, supabase)
 
     // Vérifier et débloquer les badges

@@ -35,17 +35,6 @@ export default function CartePage() {
     }
   }, [tab, pintes])
 
-  // Cleanup : détruire la carte quand on quitte la page
-  useEffect(() => {
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove()
-        mapInstanceRef.current = null
-        markersLayerRef.current = null
-      }
-    }
-  }, [])
-
   async function fetchData() {
     const [{ data: pintesData }, { data: villesData }] = await Promise.all([
       supabase.from('pintes')
@@ -65,24 +54,38 @@ export default function CartePage() {
     setLoading(false)
   }
 
-  const markersLayerRef = useRef(null)
-
   function initMapWithData(pintesData) {
     if (!mapRef.current) return
 
     function addMarkers(L, map) {
-      // Nettoyer les anciens markers avant d'en ajouter de nouveaux
+      // Nettoyer l'ancien cluster
       if (markersLayerRef.current) {
-        markersLayerRef.current.clearLayers()
-      } else {
-        markersLayerRef.current = L.layerGroup().addTo(map)
+        map.removeLayer(markersLayerRef.current)
+        markersLayerRef.current = null
       }
+
+      // Cluster group — se regroupe au dézoom, s'éparpille au zoom
+      const cluster = L.markerClusterGroup({
+        maxClusterRadius: 60,
+        iconCreateFunction: (c) => {
+          const count = c.getChildCount()
+          const size = count < 10 ? 36 : count < 50 ? 44 : 54
+          return L.divIcon({
+            className: '',
+            html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:#f5a623;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:${size < 44 ? 11 : 13}px;font-weight:700;color:#0d0d0d;box-shadow:0 2px 8px rgba(0,0,0,.4);font-family:DM Sans,sans-serif;">${count}</div>`,
+            iconSize: [size, size], iconAnchor: [size/2, size/2],
+          })
+        },
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+      })
 
       pintesData.forEach(p => {
         const icon = L.divIcon({
           className: '',
-          html: `<div style="width:30px;height:30px;border-radius:50%;background:#f5a623;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.4);">🍺</div>`,
-          iconSize: [30, 30], iconAnchor: [15, 15],
+          html: `<div style="width:28px;height:28px;border-radius:50%;background:#f5a623;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.4);">🍺</div>`,
+          iconSize: [28, 28], iconAnchor: [14, 14],
         })
         const marker = L.marker([p.latitude, p.longitude], { icon })
         marker.bindPopup(`
@@ -93,10 +96,12 @@ export default function CartePage() {
             ${p.photo_url ? `<img src="${p.photo_url}" style="width:100%;border-radius:6px;margin-top:6px;max-height:80px;object-fit:cover;"/>` : ''}
           </div>
         `)
-        markersLayerRef.current.addLayer(marker)
+        cluster.addLayer(marker)
       })
 
-      // fitBounds sur TOUS les markers, pas juste les nouveaux
+      map.addLayer(cluster)
+      markersLayerRef.current = cluster
+
       if (pintesData.length > 1) {
         const coords = pintesData.map(p => [p.latitude, p.longitude])
         try { map.fitBounds(coords, { padding: [40, 40], maxZoom: 14 }) }
@@ -106,7 +111,7 @@ export default function CartePage() {
       }
     }
 
-    // Si carte déjà créée : détruire et recréer pour éviter l'écran blanc au reload
+    // Si carte déjà créée, juste ajouter les markers
     if (mapInstanceRef.current) {
       addMarkers(window.L, mapInstanceRef.current)
       mapInstanceRef.current.invalidateSize()
@@ -116,11 +121,6 @@ export default function CartePage() {
     // Charger Leaflet et créer la carte
     function createMap() {
       if (!window.L || !mapRef.current) return
-      // Éviter double init (Leaflet plante si le div est déjà initialisé)
-      if (mapRef.current._leaflet_id) {
-        mapRef.current._leaflet_id = null
-        mapRef.current.innerHTML = ''
-      }
       if (mapInstanceRef.current) return
 
       const map = window.L.map(mapRef.current, {
@@ -134,7 +134,6 @@ export default function CartePage() {
 
       window.L.control.zoom({ position: 'topright' }).addTo(map)
       mapInstanceRef.current = map
-      markersLayerRef.current = null // reset layer ref pour la nouvelle instance
 
       addMarkers(window.L, map)
     }
@@ -152,14 +151,40 @@ export default function CartePage() {
       document.head.appendChild(css)
     }
 
+    if (!document.getElementById('markercluster-css')) {
+      const css2 = document.createElement('link')
+      css2.id = 'markercluster-css'
+      css2.rel = 'stylesheet'
+      css2.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css'
+      document.head.appendChild(css2)
+      const css3 = document.createElement('link')
+      css3.id = 'markercluster-css-default'
+      css3.rel = 'stylesheet'
+      css3.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css'
+      document.head.appendChild(css3)
+    }
+
+    function loadClusterPlugin(cb) {
+      if (window.L?.MarkerClusterGroup) { cb(); return }
+      if (!document.getElementById('markercluster-js')) {
+        const s = document.createElement('script')
+        s.id = 'markercluster-js'
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js'
+        s.onload = cb
+        document.head.appendChild(s)
+      } else {
+        setTimeout(cb, 200)
+      }
+    }
+
     if (!document.getElementById('leaflet-js')) {
       const script = document.createElement('script')
       script.id = 'leaflet-js'
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
-      script.onload = () => setTimeout(createMap, 100)
+      script.onload = () => setTimeout(() => loadClusterPlugin(() => setTimeout(createMap, 100)), 100)
       document.head.appendChild(script)
     } else {
-      setTimeout(createMap, 500)
+      loadClusterPlugin(() => setTimeout(createMap, 200))
     }
   }
 

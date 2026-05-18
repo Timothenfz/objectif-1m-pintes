@@ -134,6 +134,7 @@ export default function AdminPage() {
     }
     setMsg('✓ Chat purgé avec succès.')
     setLoading(false)
+    await fetchStats()
   }
 
   async function purgerPhotos(mode) {
@@ -168,7 +169,7 @@ export default function AdminPage() {
 
     setMsg(`✓ ${pintes.length} photos supprimées, données conservées.`)
     setLoading(false)
-    fetchStats()
+    await fetchStats()
   }
 
   if (!profile?.is_admin) return null

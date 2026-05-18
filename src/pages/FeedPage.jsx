@@ -246,8 +246,12 @@ export default function FeedPage() {
   const [pintes, setPintes] = useState([])
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(0)
+  const [hasMore, setHasMore] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [reportModal, setReportModal] = useState(null)
   const [reportedIds, setReportedIds] = useState(new Set())
+  const PAGE_SIZE = 20
   const { profile } = useAuth()
   const navigate = useNavigate()
   const isAdmin = profile?.is_admin === true
@@ -269,14 +273,43 @@ export default function FeedPage() {
     }
   }, [])
 
-  async function fetchFeed() {
+  async function fetchFeed(reset = true) {
+    if (reset) {
+      setLoading(true)
+      setPage(0)
+      setHasMore(true)
+    }
+    const from = reset ? 0 : page * PAGE_SIZE
     const { data } = await supabase.from('pintes')
       .select('*, profiles(username, total_perso, avatar_url)')
       .not('user_id', 'is', null)
       .order('created_at', { ascending:false })
-      .limit(30)
-    setPintes(data || [])
+      .range(from, from + PAGE_SIZE - 1)
+    const newData = data || []
+    if (reset) {
+      setPintes(newData)
+    } else {
+      setPintes(prev => [...prev, ...newData])
+    }
+    setHasMore(newData.length === PAGE_SIZE)
     setLoading(false)
+  }
+
+  async function loadMore() {
+    if (loadingMore || !hasMore) return
+    setLoadingMore(true)
+    const nextPage = page + 1
+    setPage(nextPage)
+    const from = nextPage * PAGE_SIZE
+    const { data } = await supabase.from('pintes')
+      .select('*, profiles(username, total_perso, avatar_url)')
+      .not('user_id', 'is', null)
+      .order('created_at', { ascending:false })
+      .range(from, from + PAGE_SIZE - 1)
+    const newData = data || []
+    setPintes(prev => [...prev, ...newData])
+    setHasMore(newData.length === PAGE_SIZE)
+    setLoadingMore(false)
   }
 
   async function fetchTotal() {
@@ -358,6 +391,24 @@ export default function FeedPage() {
           ))
         )}
       </div>
+
+      {/* Bouton charger plus */}
+      {!loading && hasMore && (
+        <div style={{ padding:'14px 14px 0', textAlign:'center' }}>
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            style={{
+              width:'100%', padding:'13px', borderRadius:14,
+              background:'var(--card-bg)', border:'1px solid var(--border)',
+              color:'var(--tx2)', fontSize:13, cursor: loadingMore ? 'default' : 'pointer',
+              opacity: loadingMore ? 0.6 : 1, fontFamily:'DM Sans,sans-serif',
+            }}
+          >
+            {loadingMore ? 'Chargement...' : '⬇️ Charger plus de pintes'}
+          </button>
+        </div>
+      )}
 
       {reportModal && (
         <ReportModal
