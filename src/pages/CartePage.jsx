@@ -25,6 +25,7 @@ export default function CartePage() {
   const [loading, setLoading] = useState(true)
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
+  const markersLayerRef = useRef(null)
   const initializedRef = useRef(false)
 
   useEffect(() => { fetchData() }, [])
@@ -120,7 +121,7 @@ export default function CartePage() {
 
     // Charger Leaflet et créer la carte
     function createMap() {
-      if (!window.L || !mapRef.current) return
+      if (!window.L || !window.L.markerClusterGroup || !mapRef.current) return
       if (mapInstanceRef.current) return
 
       const map = window.L.map(mapRef.current, {
@@ -139,7 +140,8 @@ export default function CartePage() {
     }
 
     if (window.L) {
-      createMap()
+      // Leaflet déjà chargé — s'assurer que le plugin cluster est aussi chargé
+      loadClusterPlugin(() => setTimeout(createMap, 100))
       return
     }
 

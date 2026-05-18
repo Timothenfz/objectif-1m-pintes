@@ -381,8 +381,11 @@ export default function AdminPage() {
               </div>
             </div>
             <div style={{ marginTop: 8, fontSize: 11, color: 'var(--tx2)', textAlign: 'center' }}>
-              ~{Math.round(stats.withPhoto * 0.4)}MB estimés · Supabase gratuit : 1000MB
+              ~{Math.round(stats.withPhoto * 0.15)}MB estimés · Supabase gratuit : 1000MB
             </div>
+            <button onClick={fetchStats} style={{ marginTop: 10, width: '100%', padding: '8px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--tx2)', fontSize: 12, cursor: 'pointer' }}>
+              ↺ Actualiser les stats
+            </button>
           </div>
         )}
 
