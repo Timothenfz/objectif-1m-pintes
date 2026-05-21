@@ -37,20 +37,31 @@ export default function CartePage() {
   }, [tab, pintes])
 
   async function fetchData() {
-    const [{ data: pintesData }, { data: villesData }] = await Promise.all([
-      supabase.from('pintes')
+    // Récupérer TOUTES les pintes GPS par batch de 1000
+    let allPintes = []
+    let from = 0
+    const batchSize = 1000
+    while (true) {
+      const { data: batch } = await supabase.from('pintes')
         .select('id, numero_global, lieu, latitude, longitude, photo_url, profiles(username)')
         .not('latitude', 'is', null)
         .not('longitude', 'is', null)
         .not('user_id', 'is', null)
-        .order('created_at', { ascending: false }),
-      supabase.from('classement_villes')
-        .select('*')
-        .order('total_pintes', { ascending: false })
-        .limit(30),
-    ])
-    console.log('Pintes avec GPS:', pintesData?.length)
-    setPintes(pintesData || [])
+        .order('created_at', { ascending: false })
+        .range(from, from + batchSize - 1)
+      if (!batch || batch.length === 0) break
+      allPintes = [...allPintes, ...batch]
+      if (batch.length < batchSize) break
+      from += batchSize
+    }
+
+    const { data: villesData } = await supabase.from('classement_villes')
+      .select('*')
+      .order('total_pintes', { ascending: false })
+      .limit(30)
+
+    console.log('Pintes avec GPS:', allPintes.length)
+    setPintes(allPintes)
     setVilles(villesData || [])
     setLoading(false)
   }

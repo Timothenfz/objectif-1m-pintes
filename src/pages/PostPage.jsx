@@ -81,15 +81,55 @@ async function checkAndUnlockBadges(userId, newProfile, pinte) {
     .single()
   const isFirst = topProfile?.id === userId
 
+  // Calculer le streak (jours consécutifs)
+  const { data: pintesHistory } = await supabase
+    .from('pintes')
+    .select('created_at, lieu')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(100)
+
+  let streak = 1
+  if (pintesHistory && pintesHistory.length > 1) {
+    const today = new Date(); today.setHours(0,0,0,0)
+    let checkDate = new Date(today); checkDate.setDate(checkDate.getDate() - 1)
+    for (let i = 1; i < pintesHistory.length; i++) {
+      const d = new Date(pintesHistory[i].created_at); d.setHours(0,0,0,0)
+      if (d.getTime() === checkDate.getTime()) {
+        streak++
+        checkDate.setDate(checkDate.getDate() - 1)
+      } else if (d.getTime() < checkDate.getTime()) {
+        break
+      }
+    }
+  }
+
+  // Calculer maxSameLieu
+  const lieuCounts = {}
+  ;(pintesHistory || []).forEach(p => { if (p.lieu) lieuCounts[p.lieu] = (lieuCounts[p.lieu] || 0) + 1 })
+  const maxSameLieu = Math.max(0, ...Object.values(lieuCounts))
+
+  // Compter les réactions reçues
+  const { count: reactions } = await supabase
+    .from('reactions')
+    .select('*', { count: 'exact', head: true })
+    .in('pinte_id', (pintesHistory || []).map(p => p.id).filter(Boolean).slice(0, 50))
+
+  // Compter les commentaires reçus
+  const { count: commentaires } = await supabase
+    .from('commentaires')
+    .select('*', { count: 'exact', head: true })
+    .in('pinte_id', (pintesHistory || []).map(p => p.id).filter(Boolean).slice(0, 50))
+
   const state = {
     total_perso: newProfile?.total_perso || 0,
-    streak: 1,
+    streak,
     hasEarlyPost: hour < 10,
     hasNightPost: hour >= 0 && hour < 4,
     hasHappyHour: hour >= 17 && hour < 19,
     hasApero: hour >= 12 && hour < 14,
-    nbVilles: 1,
-    maxSameLieu: 1,
+    nbVilles: Object.keys(lieuCounts).length,
+    maxSameLieu,
     hasFriday: dayOfWeek === 5 && hour >= 18,
     weekendPintes: 1,
     firstOfDay: 1,
@@ -100,8 +140,8 @@ async function checkAndUnlockBadges(userId, newProfile, pinte) {
     hasWhiteNight: hour >= 3 && hour < 5,
     hasGoldenPint: pinte.numero_global === 1000 || pinte.numero_global === 10000,
     chatMessages: 0,
-    reactions: 0,
-    commentaires: 0,
+    reactions: reactions || 0,
+    commentaires: commentaires || 0,
   }
 
   const toUnlock = BADGES.filter(b => !existingIds.has(b.id) && b.check(state))
