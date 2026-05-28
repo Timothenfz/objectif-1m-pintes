@@ -174,6 +174,14 @@ async function checkAndUnlockBadges(userId, newProfile, pinte) {
       const d = new Date(p.created_at).getDay()
       return d === 0 || d === 6
     }).length,
+    hasLundiPlaisir: (() => {
+      const now = new Date(pinte.created_at || Date.now())
+      return now.getDay() === 1 && now.getHours() >= 8 && now.getHours() < 10
+    })(),
+    weekPintes: (() => {
+      const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay()); weekStart.setHours(0,0,0,0)
+      return (pintesHistory || []).filter(p => new Date(p.created_at) >= weekStart).length
+    })(),
     firstOfDay: 1,
     canettes: 0,
     pinteMaison: 0,
