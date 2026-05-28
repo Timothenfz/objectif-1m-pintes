@@ -258,19 +258,11 @@ export default function FeedPage() {
 
   useEffect(() => {
     fetchFeed(); fetchTotal()
+    // Realtime uniquement pour le compteur global (pas de refresh auto du feed)
     const channel = supabase.channel('pintes-feed')
-      .on('postgres_changes', { event:'INSERT', schema:'public', table:'pintes' }, () => { fetchFeed(); fetchTotal() })
+      .on('postgres_changes', { event:'INSERT', schema:'public', table:'pintes' }, () => { fetchTotal() })
       .subscribe()
-    const interval = setInterval(() => { fetchFeed(); fetchTotal() }, 10000)
-    function handleVisibility() {
-      if (document.visibilityState === 'visible') { fetchFeed(); fetchTotal() }
-    }
-    document.addEventListener('visibilitychange', handleVisibility)
-    return () => {
-      supabase.removeChannel(channel)
-      clearInterval(interval)
-      document.removeEventListener('visibilitychange', handleVisibility)
-    }
+    return () => { supabase.removeChannel(channel) }
   }, [])
 
   async function fetchFeed(reset = true) {
@@ -313,9 +305,13 @@ export default function FeedPage() {
   }
 
   async function fetchTotal() {
-    const { count } = await supabase.from('pintes')
-      .select('*', { count: 'exact', head: true })
-    setTotal(count || 0)
+    // Utiliser le MAX du numero_global pour être cohérent avec le numéro affiché sur les pintes
+    const { data } = await supabase.from('pintes')
+      .select('numero_global')
+      .order('numero_global', { ascending: false })
+      .limit(1)
+      .single()
+    setTotal(data?.numero_global || 0)
   }
 
   function handleReported(pinteId) {

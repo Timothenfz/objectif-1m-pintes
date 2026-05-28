@@ -169,6 +169,8 @@ export default function AdminPage() {
 
     setMsg(`✓ ${pintes.length} photos supprimées, données conservées.`)
     setLoading(false)
+    // Délai pour laisser Supabase propager les mises à jour
+    await new Promise(r => setTimeout(r, 1000))
     await fetchStats()
   }
 
