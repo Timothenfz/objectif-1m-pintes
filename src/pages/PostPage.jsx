@@ -140,25 +140,19 @@ async function checkAndUnlockBadges(userId, newProfile, pinte) {
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
 
-  if (pinteIds.length > 0) {
-    // Découper en chunks de 50 pour éviter les limites Supabase
-    const chunks = []
-    for (let i = 0; i < pinteIds.length; i += 50) chunks.push(pinteIds.slice(i, i + 50))
+  // Réactions postées PAR l'utilisateur (pas reçues)
+  const { count: reactionsCount } = await supabase
+    .from('reactions')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+  reactions = reactionsCount || 0
 
-    for (const chunk of chunks) {
-      const { count: r } = await supabase
-        .from('reactions')
-        .select('*', { count: 'exact', head: true })
-        .in('pinte_id', chunk)
-      reactions += r || 0
-
-      const { count: c } = await supabase
-        .from('commentaires')
-        .select('*', { count: 'exact', head: true })
-        .in('pinte_id', chunk)
-      commentaires += c || 0
-    }
-  }
+  // Commentaires postés PAR l'utilisateur (pas reçus)
+  const { count: commentairesCount } = await supabase
+    .from('commentaires')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+  commentaires = commentairesCount || 0
 
   const state = {
     total_perso: newProfile?.total_perso || 0,
