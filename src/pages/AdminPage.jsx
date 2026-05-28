@@ -16,6 +16,7 @@ export default function AdminPage() {
   const { profile } = useAuth()
   const navigate = useNavigate()
   const [stats, setStats] = useState(null)
+  const [statsLoading, setStatsLoading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
   const [reports, setReports] = useState([])
@@ -29,12 +30,14 @@ export default function AdminPage() {
   }, [profile])
 
   async function fetchStats() {
+    setStatsLoading(true)
     const [{ count: total }, { count: withPhoto }, { data: storage }] = await Promise.all([
       supabase.from('pintes').select('*', { count: 'exact', head: true }),
       supabase.from('pintes').select('*', { count: 'exact', head: true }).not('photo_url', 'is', null).not('user_id', 'is', null),
       supabase.from('pintes').select('photo_url').not('photo_url', 'is', null).not('user_id', 'is', null).order('numero_global', { ascending: true }).limit(1000),
     ])
     setStats({ total, withPhoto, oldest1000: storage?.length || 0 })
+    setStatsLoading(false)
   }
 
   async function fetchReports() {
@@ -385,8 +388,8 @@ export default function AdminPage() {
             <div style={{ marginTop: 8, fontSize: 11, color: 'var(--tx2)', textAlign: 'center' }}>
               ~{Math.round(stats.withPhoto * 0.15)}MB estimés · Supabase gratuit : 1000MB
             </div>
-            <button onClick={fetchStats} style={{ marginTop: 10, width: '100%', padding: '8px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--tx2)', fontSize: 12, cursor: 'pointer' }}>
-              ↺ Actualiser les stats
+            <button onClick={fetchStats} disabled={statsLoading} style={{ marginTop: 10, width: '100%', padding: '8px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--tx2)', fontSize: 12, cursor: statsLoading ? 'default' : 'pointer', opacity: statsLoading ? 0.6 : 1 }}>
+              {statsLoading ? 'Actualisation...' : '↺ Actualiser les stats'}
             </button>
           </div>
         )}
