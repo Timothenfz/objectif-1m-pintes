@@ -67,12 +67,32 @@ export default function ChatPage() {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'instant' }), 50)
   }
 
+  async function checkSocialKingBadge() {
+    const { count } = await supabase
+      .from('messages_chat')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+    if ((count || 0) >= 50) {
+      const { data: existing } = await supabase
+        .from('badges_utilisateur')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('badge_id', 'social_king')
+        .limit(1)
+      if (!existing?.length) {
+        await supabase.from('badges_utilisateur').insert({ user_id: user.id, badge_id: 'social_king' })
+      }
+    }
+  }
+
   async function sendMessage() {
     const t = text.trim()
     if (!t || loading) return
     setLoading(true)
     setText('')
     await supabase.from('messages_chat').insert({ user_id: user.id, texte: t })
+    // Vérifier le badge Roi du Chat
+    checkSocialKingBadge()
     setLoading(false)
     inputRef.current?.focus()
   }
@@ -87,15 +107,10 @@ export default function ChatPage() {
     const compressed = await compressImage(file)
     const path = `chat/${user.id}/${Date.now()}.jpg`
     const { error: uploadError } = await supabase.storage.from('pintes').upload(path, compressed)
-    if (uploadError) {
-      console.error('Erreur upload photo chat:', uploadError)
-      alert('Erreur upload : ' + uploadError.message)
-      setUploadingPhoto(false)
-      photoRef.current.value = ''
-      return
+    if (!uploadError) {
+      const { data: { publicUrl } } = supabase.storage.from('pintes').getPublicUrl(path)
+      await supabase.from('messages_chat').insert({ user_id: user.id, texte: `[photo]${publicUrl}` })
     }
-    const { data: { publicUrl } } = supabase.storage.from('pintes').getPublicUrl(path)
-    await supabase.from('messages_chat').insert({ user_id: user.id, texte: `[photo]${publicUrl}` })
     setUploadingPhoto(false)
     photoRef.current.value = ''
   }
