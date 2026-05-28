@@ -76,6 +76,8 @@ function CommentModal({ pinteId, onClose }) {
     await supabase.from('commentaires').insert({ pinte_id: pinteId, user_id: user.id, texte: text.trim() })
     setText('')
     await fetchComments()
+    // Vérifier le badge Commentateur
+    checkCommentatorBadge()
     setLoading(false)
   }
 
@@ -249,6 +251,42 @@ export default function Reactions({ pinteId, style }) {
     })
   }
 
+  async function checkReactorBadge() {
+    const { count } = await supabase
+      .from('reactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+    if ((count || 0) >= 30) {
+      const { data: existing } = await supabase
+        .from('badges_utilisateur')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('badge_id', 'reactor')
+        .limit(1)
+      if (!existing?.length) {
+        await supabase.from('badges_utilisateur').insert({ user_id: user.id, badge_id: 'reactor' })
+      }
+    }
+  }
+
+  async function checkCommentatorBadge() {
+    const { count } = await supabase
+      .from('commentaires')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+    if ((count || 0) >= 20) {
+      const { data: existing } = await supabase
+        .from('badges_utilisateur')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('badge_id', 'commentator')
+        .limit(1)
+      if (!existing?.length) {
+        await supabase.from('badges_utilisateur').insert({ user_id: user.id, badge_id: 'commentator' })
+      }
+    }
+  }
+
   async function toggleReaction(emoji) {
     if (!user) return
     setShowPicker(false)
@@ -265,6 +303,8 @@ export default function Reactions({ pinteId, style }) {
         if (ex) return rs.map(r => r.emoji===emoji ? {...r, nb: r.nb+1} : r)
         return [...rs, { pinte_id: pinteId, emoji, nb: 1, user_ids: [user.id] }]
       })
+      // Vérifier le badge Réacteur
+      checkReactorBadge()
     }
   }
 
@@ -273,71 +313,67 @@ export default function Reactions({ pinteId, style }) {
   return (
     <>
       <div style={{ padding:'8px 12px', ...style }}>
-        {/* Ligne 1 : emojis + bouton ajouter + Commenter tout à droite */}
-        <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'nowrap', position:'relative' }}>
-          {/* Emojis existants */}
-          <div style={{ display:'flex', alignItems:'center', gap:5, flexWrap:'wrap', flex:1, minWidth:0 }}>
-            {sorted.map(r => (
-              <button key={r.emoji} onClick={() => toggleReaction(r.emoji)} style={{
-                display:'flex', alignItems:'center', gap:4,
-                padding:'4px 9px', borderRadius:20,
-                background: myReactions.has(r.emoji) ? 'rgba(245,166,35,0.15)' : 'rgba(255,255,255,0.06)',
-                border: `1px solid ${myReactions.has(r.emoji) ? 'rgba(245,166,35,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                cursor:'pointer', transition:'all .15s',
-                fontSize:15, lineHeight:1,
-                fontFamily:'DM Sans,sans-serif',
-              }}>
-                <span>{r.emoji}</span>
-                <span style={{ fontSize:11, color: myReactions.has(r.emoji) ? '#f5a623' : '#7a7670', fontWeight:500 }}>{r.nb}</span>
-              </button>
-            ))}
-
-            {/* Bouton ajouter emoji */}
-            <button onClick={() => setShowPicker(p => !p)} style={{
-              width:30, height:28, borderRadius:20,
-              background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)',
-              cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center',
-              color:'#7a7670', transition:'all .15s', flexShrink:0,
+        {/* Ligne réactions */}
+        <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap', position:'relative' }}>
+          {sorted.map(r => (
+            <button key={r.emoji} onClick={() => toggleReaction(r.emoji)} style={{
+              display:'flex', alignItems:'center', gap:4,
+              padding:'4px 9px', borderRadius:20,
+              background: myReactions.has(r.emoji) ? 'rgba(245,166,35,0.15)' : 'rgba(255,255,255,0.06)',
+              border: `1px solid ${myReactions.has(r.emoji) ? 'rgba(245,166,35,0.4)' : 'rgba(255,255,255,0.1)'}`,
+              cursor:'pointer', transition:'all .15s',
+              fontSize:15, lineHeight:1,
+              fontFamily:'DM Sans,sans-serif',
             }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
-              </svg>
+              <span>{r.emoji}</span>
+              <span style={{ fontSize:11, color: myReactions.has(r.emoji) ? '#f5a623' : '#7a7670', fontWeight:500 }}>{r.nb}</span>
             </button>
+          ))}
 
-            {showPicker && <EmojiPicker onPick={toggleReaction} onClose={() => setShowPicker(false)} />}
-          </div>
-
-          {/* Bouton Commenter — même ligne, tout à droite */}
-          <button onClick={() => setShowComments(true)} style={{
-            display:'flex', alignItems:'center', gap:4, flexShrink:0,
-            background:'none', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20,
-            cursor:'pointer', padding:'5px 10px',
-            color:'#7a7670', fontSize:11, fontFamily:'DM Sans,sans-serif',
+          {/* Bouton ajouter emoji */}
+          <button onClick={() => setShowPicker(p => !p)} style={{
+            width:30, height:28, borderRadius:20,
+            background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)',
+            cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center',
+            color:'#7a7670', transition:'all .15s',
           }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
             </svg>
-            {nbComments > 0 ? nbComments : 'Commenter'}
           </button>
+
+          {showPicker && <EmojiPicker onPick={toggleReaction} onClose={() => setShowPicker(false)} />}
         </div>
 
-        {/* Ligne 2 : preview top commentaire si existe */}
-        {topComment && (
-          <div style={{ marginTop:6 }}>
-            <div style={{ fontSize:11, color:'#c8c4bc', lineHeight:1.4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-              <span style={{ fontWeight:500, color:'#ede9e0', marginRight:4 }}>{topComment.profiles?.username}</span>
-              {topComment.texte.length > 60 ? topComment.texte.slice(0,60)+'…' : topComment.texte}
-            </div>
+        {/* Ligne commentaires */}
+        <div style={{ marginTop:8, display:'flex', alignItems:'flex-start', gap:8, justifyContent:'space-between' }}>
+          <div style={{ flex:1, minWidth:0 }}>
+            {topComment && (
+              <div style={{ fontSize:12, color:'#c8c4bc', lineHeight:1.4 }}>
+                <span style={{ fontWeight:500, color:'#ede9e0', marginRight:5 }}>{topComment.profiles?.username}</span>
+                {topComment.texte.length > 60 ? topComment.texte.slice(0,60)+'…' : topComment.texte}
+              </div>
+            )}
             {nbComments > 1 && (
               <button onClick={() => setShowComments(true)} style={{
                 background:'none', border:'none', cursor:'pointer', padding:0,
-                fontSize:10, color:'#7a7670', marginTop:2, fontFamily:'DM Sans,sans-serif',
+                fontSize:11, color:'#7a7670', marginTop:3, fontFamily:'DM Sans,sans-serif',
               }}>
                 Voir les {nbComments} commentaires
               </button>
             )}
           </div>
-        )}
+          <button onClick={() => setShowComments(true)} style={{
+            display:'flex', alignItems:'center', gap:4, flexShrink:0,
+            background:'none', border:'none', cursor:'pointer', padding:0,
+            color:'#7a7670', fontSize:11, fontFamily:'DM Sans,sans-serif',
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+            {nbComments > 0 ? nbComments : 'Commenter'}
+          </button>
+        </div>
       </div>
 
       {showComments && (
