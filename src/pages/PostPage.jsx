@@ -82,12 +82,13 @@ async function checkAndUnlockBadges(userId, newProfile, pinte) {
   const isFirst = topProfile?.id === userId
 
   // Calculer le streak (jours consécutifs)
+  // Récupérer l'historique avec id pour les réactions/commentaires
   const { data: pintesHistory } = await supabase
     .from('pintes')
-    .select('created_at, lieu')
+    .select('id, created_at, lieu, latitude, longitude')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
-    .limit(100)
+    .limit(200)
 
   let streak = 1
   if (pintesHistory && pintesHistory.length > 1) {
@@ -104,22 +105,54 @@ async function checkAndUnlockBadges(userId, newProfile, pinte) {
     }
   }
 
-  // Calculer maxSameLieu
+  // Calculer maxSameLieu — comparaison insensible à la casse + rayon GPS (~500m)
+  // Stratégie 1 : grouper par lieu normalisé (lowercase, trim)
   const lieuCounts = {}
-  ;(pintesHistory || []).forEach(p => { if (p.lieu) lieuCounts[p.lieu] = (lieuCounts[p.lieu] || 0) + 1 })
-  const maxSameLieu = Math.max(0, ...Object.values(lieuCounts))
+  ;(pintesHistory || []).forEach(p => {
+    if (p.lieu) {
+      const key = p.lieu.toLowerCase().trim()
+      lieuCounts[key] = (lieuCounts[key] || 0) + 1
+    }
+  })
 
-  // Compter les réactions reçues
-  const { count: reactions } = await supabase
-    .from('reactions')
-    .select('*', { count: 'exact', head: true })
-    .in('pinte_id', (pintesHistory || []).map(p => p.id).filter(Boolean).slice(0, 50))
+  // Stratégie 2 : grouper par coordonnées GPS si disponibles (~500m de rayon)
+  const gpsCounts = {}
+  ;(pintesHistory || []).filter(p => p.latitude && p.longitude).forEach(p => {
+    // Arrondir à ~500m (0.005 degrés ≈ 500m)
+    const gpsKey = `${Math.round(p.latitude * 200) / 200},${Math.round(p.longitude * 200) / 200}`
+    gpsCounts[gpsKey] = (gpsCounts[gpsKey] || 0) + 1
+  })
 
-  // Compter les commentaires reçus
-  const { count: commentaires } = await supabase
-    .from('commentaires')
-    .select('*', { count: 'exact', head: true })
-    .in('pinte_id', (pintesHistory || []).map(p => p.id).filter(Boolean).slice(0, 50))
+  const maxSameLieu = Math.max(
+    0,
+    ...Object.values(lieuCounts),
+    ...Object.values(gpsCounts)
+  )
+
+  // Compter les réactions reçues sur toutes les pintes
+  const pinteIds = (pintesHistory || []).map(p => p.id).filter(Boolean)
+  let reactions = 0
+  let commentaires = 0
+
+  if (pinteIds.length > 0) {
+    // Découper en chunks de 50 pour éviter les limites Supabase
+    const chunks = []
+    for (let i = 0; i < pinteIds.length; i += 50) chunks.push(pinteIds.slice(i, i + 50))
+
+    for (const chunk of chunks) {
+      const { count: r } = await supabase
+        .from('reactions')
+        .select('*', { count: 'exact', head: true })
+        .in('pinte_id', chunk)
+      reactions += r || 0
+
+      const { count: c } = await supabase
+        .from('commentaires')
+        .select('*', { count: 'exact', head: true })
+        .in('pinte_id', chunk)
+      commentaires += c || 0
+    }
+  }
 
   const state = {
     total_perso: newProfile?.total_perso || 0,
