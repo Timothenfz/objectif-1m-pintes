@@ -170,7 +170,10 @@ async function checkAndUnlockBadges(userId, newProfile, pinte) {
     nbVilles: Object.keys(lieuCounts).length,
     maxSameLieu,
     hasFriday: dayOfWeek === 5 && hour >= 18,
-    weekendPintes: 1,
+    weekendPintes: (pintesHistory || []).filter(p => {
+      const d = new Date(p.created_at).getDay()
+      return d === 0 || d === 6
+    }).length,
     firstOfDay: 1,
     canettes: 0,
     pinteMaison: 0,
