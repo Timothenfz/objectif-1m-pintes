@@ -134,6 +134,12 @@ async function checkAndUnlockBadges(userId, newProfile, pinte) {
   let reactions = 0
   let commentaires = 0
 
+  // Compter les messages chat
+  const { count: chatMessages } = await supabase
+    .from('messages_chat')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+
   if (pinteIds.length > 0) {
     // Découper en chunks de 50 pour éviter les limites Supabase
     const chunks = []
@@ -172,7 +178,7 @@ async function checkAndUnlockBadges(userId, newProfile, pinte) {
     isFirst,
     hasWhiteNight: hour >= 3 && hour < 5,
     hasGoldenPint: pinte.numero_global === 1000 || pinte.numero_global === 10000,
-    chatMessages: 0,
+    chatMessages: chatMessages || 0,
     reactions: reactions || 0,
     commentaires: commentaires || 0,
   }
