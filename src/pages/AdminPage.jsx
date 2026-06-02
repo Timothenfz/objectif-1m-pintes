@@ -33,8 +33,8 @@ export default function AdminPage() {
     setStatsLoading(true)
     const [{ count: total }, { count: withPhoto }, { data: storage }] = await Promise.all([
       supabase.from('pintes').select('*', { count: 'exact', head: true }),
-      supabase.from('pintes').select('*', { count: 'exact', head: true }).not('photo_url', 'is', null).not('user_id', 'is', null),
-      supabase.from('pintes').select('photo_url').not('photo_url', 'is', null).not('user_id', 'is', null).order('numero_global', { ascending: true }).limit(1000),
+      supabase.from('pintes').select('*', { count: 'exact', head: true }).not('photo_url', 'is', null).not('user_id', 'is', null).like('photo_url', '%supabase%'),
+      supabase.from('pintes').select('photo_url').not('photo_url', 'is', null).not('user_id', 'is', null).like('photo_url', '%supabase%').order('numero_global', { ascending: true }).limit(1000),
     ])
     setStats({ total, withPhoto, oldest1000: storage?.length || 0 })
     setStatsLoading(false)
@@ -144,7 +144,7 @@ export default function AdminPage() {
     if (!window.confirm(`Supprimer les photos des ${mode === 'oldest' ? '1000 premières' : 'pintes de plus de 6 mois'} ? Les pintes restent dans le classement.`)) return
     setLoading(true); setMsg('')
 
-    let query = supabase.from('pintes').select('id, photo_url').not('photo_url', 'is', null).not('user_id', 'is', null)
+    let query = supabase.from('pintes').select('id, photo_url').not('photo_url', 'is', null).not('user_id', 'is', null).like('photo_url', '%supabase%')
 
     if (mode === 'oldest') {
       query = query.order('numero_global', { ascending: true }).limit(1000)
