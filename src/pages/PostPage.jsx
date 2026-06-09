@@ -176,7 +176,18 @@ async function checkAndUnlockBadges(userId, newProfile, pinte) {
       const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay()); weekStart.setHours(0,0,0,0)
       return (pintesHistory || []).filter(p => new Date(p.created_at) >= weekStart).length
     })(),
-    firstOfDay: 1,
+    firstOfDay: await (async () => {
+      // Vérifier si cette pinte est la première de la journée toutes personnes confondues
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0)
+      const { count: pintesAujourdhui } = await supabase
+        .from('pintes')
+        .select('*', { count: 'exact', head: true })
+        .not('user_id', 'is', null)
+        .gte('created_at', todayStart.toISOString())
+        .neq('user_id', userId)
+      // Si count = 0, on est le premier aujourd'hui
+      return (pintesAujourdhui || 0) === 0 ? 1 : 0
+    })(),
     canettes: 0,
     pinteMaison: 0,
     referrals: 0,
